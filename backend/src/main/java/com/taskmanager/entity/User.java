@@ -37,6 +37,9 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private Role role;
     
+    @Column(name = "profile_photo_url")
+    private String profilePhotoUrl;
+    
     @OneToMany(mappedBy = "assignedUser", fetch = FetchType.LAZY)
     private Set<Task> assignedTasks = new HashSet<>();
     
@@ -140,6 +143,14 @@ public class User implements UserDetails {
     
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public String getProfilePhotoUrl() {
+        return profilePhotoUrl;
+    }
+
+    public void setProfilePhotoUrl(String profilePhotoUrl) {
+        this.profilePhotoUrl = profilePhotoUrl;
     }
 }
 

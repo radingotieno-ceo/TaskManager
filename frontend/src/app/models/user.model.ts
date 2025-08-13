@@ -2,7 +2,9 @@ export interface User {
   id: number;
   name: string;
   email: string;
-  role: 'ADMIN' | 'MANAGER' | 'USER';
+  role: string;
+  profilePhotoUrl?: string;
+  createdAt?: string;
 }
 
 export interface AuthResponse {

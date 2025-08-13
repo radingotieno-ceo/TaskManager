@@ -14,15 +14,15 @@
     </div>
     
     <div class="sidebar-nav">
-      <a class="nav-item active" (click)="setActiveTab('dashboard')">
+      <a class="nav-item" [class.active]="activeTab === 'dashboard'" (click)="setActiveTab('dashboard')">
         <mat-icon>dashboard</mat-icon>
         <span *ngIf="!sidebarCollapsed">Dashboard</span>
       </a>
-      <a class="nav-item" (click)="setActiveTab('tasks')">
+      <a class="nav-item" [class.active]="activeTab === 'tasks'" (click)="setActiveTab('tasks')">
         <mat-icon>task</mat-icon>
         <span *ngIf="!sidebarCollapsed">Tasks</span>
       </a>
-      <a class="nav-item" (click)="setActiveTab('settings')">
+      <a class="nav-item" [class.active]="activeTab === 'settings'" (click)="setActiveTab('settings')">
         <mat-icon>settings</mat-icon>
         <span *ngIf="!sidebarCollapsed">Settings</span>
       </a>
@@ -58,7 +58,8 @@
         
         <div class="user-profile">
           <div class="avatar">
-            <mat-icon>person</mat-icon>
+            <img *ngIf="currentUser?.profilePhotoUrl" [src]="getProfilePhotoUrl(currentUser?.profilePhotoUrl)" alt="Profile Photo" class="profile-image">
+            <mat-icon *ngIf="!currentUser?.profilePhotoUrl">person</mat-icon>
           </div>
           <div class="user-info" *ngIf="currentUser">
             <div class="user-name">{{ currentUser.name }}</div>
@@ -82,8 +83,9 @@
 
       <!-- Dashboard Content -->
       <div class="content-area" *ngIf="!loading">
-        <!-- Dashboard Sections -->
-        <div class="dashboard-sections">
+        
+        <!-- Dashboard Tab -->
+        <div class="dashboard-sections" *ngIf="activeTab === 'dashboard'">
           <!-- My Tasks Section -->
           <div class="section-card tasks-section">
             <div class="section-header">
@@ -95,19 +97,19 @@
               <div class="task-item" *ngFor="let task of myTasks">
                 <div class="task-header">
                   <h3 class="task-name">{{ task.title }}</h3>
-                                     <span class="priority-badge" [class]="task.priority.toLowerCase()">{{ task.priority || 'MEDIUM' }}</span>
+                  <span class="priority-badge" [class]="(task.priority || 'MEDIUM').toLowerCase()">{{ task.priority || 'MEDIUM' }}</span>
                 </div>
                 <div class="task-meta">
                   <span class="task-project">{{ task.project?.name || 'General' }}</span>
                 </div>
                 <div class="task-progress">
-                                     <div class="progress-bar">
-                     <div class="progress-fill" [style.width.%]="getTaskProgress(task)"></div>
-                   </div>
-                   <span class="progress-text">{{ getTaskProgress(task) }}%</span>
+                  <div class="progress-bar">
+                    <div class="progress-fill" [style.width.%]="getTaskProgress(task)"></div>
+                  </div>
+                  <span class="progress-text">{{ getTaskProgress(task) }}%</span>
                 </div>
                 <div class="task-footer">
-                                     <span class="status-badge" [class]="task.status.toLowerCase()">{{ task.status || 'TODO' }}</span>
+                  <span class="status-badge" [class]="task.status.toLowerCase()">{{ task.status || 'TODO' }}</span>
                   <span class="due-date">
                     <mat-icon class="calendar-icon">calendar_today</mat-icon>
                     {{ task.dueDate | date:'yyyy-MM-dd' || 'No due date' }}
@@ -135,7 +137,7 @@
               <div class="project-item" *ngFor="let project of myProjects">
                 <div class="project-header">
                   <h3 class="project-name">{{ project.name }}</h3>
-                                     <span class="role-badge">{{ getProjectRole(project) }}</span>
+                  <span class="role-badge">{{ getProjectRole(project) }}</span>
                 </div>
                 <div class="project-progress">
                   <div class="progress-bar">
@@ -144,7 +146,7 @@
                   <span class="progress-text">{{ project.progress || 0 }}%</span>
                 </div>
                 <div class="project-footer">
-                                     <span class="tasks-assigned">{{ getProjectTaskCount(project) }} tasks assigned</span>
+                  <span class="tasks-assigned">{{ getProjectTaskCount(project) }} tasks assigned</span>
                 </div>
               </div>
               
@@ -160,6 +162,245 @@
               <button class="view-projects-btn" (click)="viewProjectDetails()">
                 View Project Details
               </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tasks Tab -->
+        <div class="tasks-tab" *ngIf="activeTab === 'tasks'">
+          <div class="tab-header">
+            <h2 class="tab-title">My Tasks</h2>
+            <p class="tab-subtitle">Manage and track your assigned tasks</p>
+          </div>
+          
+          <div class="task-stats">
+            <div class="stat-card">
+              <div class="stat-value">{{ taskStats.total }}</div>
+              <div class="stat-label">Total Tasks</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value">{{ taskStats.completed }}</div>
+              <div class="stat-label">Completed</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value">{{ taskStats.inProgress }}</div>
+              <div class="stat-label">In Progress</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value">{{ taskStats.todo }}</div>
+              <div class="stat-label">To Do</div>
+            </div>
+          </div>
+          
+          <div class="task-list-detailed">
+            <div class="task-item-detailed" *ngFor="let task of myTasks">
+              <div class="task-content">
+                <div class="task-header-detailed">
+                  <h3 class="task-title">{{ task.title }}</h3>
+                  <div class="task-badges">
+                    <span class="priority-badge" [class]="(task.priority || 'MEDIUM').toLowerCase()">{{ task.priority || 'MEDIUM' }}</span>
+                    <span class="status-badge" [class]="(task.status || 'TODO').toLowerCase()">{{ task.status || 'TODO' }}</span>
+                  </div>
+                </div>
+                <div class="task-description" *ngIf="task.description">
+                  {{ task.description }}
+                </div>
+                <div class="task-meta-detailed">
+                  <div class="meta-item">
+                    <mat-icon>folder</mat-icon>
+                    <span>{{ task.project?.name || 'General' }}</span>
+                  </div>
+                  <div class="meta-item">
+                    <mat-icon>calendar_today</mat-icon>
+                    <span>Due: {{ task.dueDate | date:'yyyy-MM-dd' || 'No due date' }}</span>
+                  </div>
+                </div>
+                <div class="task-actions">
+                  <button class="action-btn" (click)="updateTaskStatus(task.id, 'IN_PROGRESS')" 
+                          *ngIf="task.status === 'TODO'">
+                    <mat-icon>play_arrow</mat-icon>
+                    Start Task
+                  </button>
+                  <button class="action-btn" (click)="updateTaskStatus(task.id, 'DONE')" 
+                          *ngIf="task.status === 'IN_PROGRESS'">
+                    <mat-icon>check</mat-icon>
+                    Complete Task
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Empty state -->
+            <div class="empty-state" *ngIf="!myTasks || myTasks.length === 0">
+              <mat-icon class="empty-icon">task_alt</mat-icon>
+              <p class="empty-text">No tasks assigned yet</p>
+              <p class="empty-subtext">Tasks will appear here once assigned to you by a manager</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Settings Tab -->
+        <div class="settings-tab" *ngIf="activeTab === 'settings'">
+          <div class="tab-header">
+            <h2 class="tab-title">Settings</h2>
+            <p class="tab-subtitle">Manage your account settings and profile</p>
+          </div>
+          
+          <div class="settings-content">
+            <!-- Profile Information Section -->
+            <div class="setting-section">
+              <h3>Profile Information</h3>
+              <div class="profile-info" *ngIf="currentUser">
+                <div class="profile-photo-section">
+                  <div class="profile-photo">
+                    <img *ngIf="currentUser?.profilePhotoUrl" [src]="getProfilePhotoUrl(currentUser?.profilePhotoUrl)" alt="Profile Photo" class="profile-image">
+                    <div *ngIf="!currentUser?.profilePhotoUrl" class="profile-placeholder">
+                      <mat-icon>person</mat-icon>
+                    </div>
+                  </div>
+                  <div class="photo-actions">
+                    <input type="file" #fileInput (change)="onFileSelected($event)" accept="image/*" style="display: none;">
+                    <button class="action-btn" (click)="fileInput.click()">
+                      <mat-icon>photo_camera</mat-icon>
+                      Upload Photo
+                    </button>
+                    <button *ngIf="currentUser?.profilePhotoUrl" class="action-btn secondary" (click)="removeProfilePhoto()">
+                      <mat-icon>delete</mat-icon>
+                      Remove Photo
+                    </button>
+                  </div>
+                </div>
+                
+                <div class="profile-details">
+                  <div class="info-item">
+                    <label>Name:</label>
+                    <span>{{ currentUser.name }}</span>
+                    <button class="edit-btn" (click)="editProfile()">
+                      <mat-icon>edit</mat-icon>
+                    </button>
+                  </div>
+                  <div class="info-item">
+                    <label>Email:</label>
+                    <span>{{ currentUser.email }}</span>
+                  </div>
+                  <div class="info-item">
+                    <label>Role:</label>
+                    <span class="role-badge">{{ currentUser.role }}</span>
+                  </div>
+                  <div class="info-item" *ngIf="currentUser.createdAt">
+                    <label>Member Since:</label>
+                    <span>{{ currentUser.createdAt | date:'mediumDate' }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Security Section -->
+            <div class="setting-section">
+              <h3>Security</h3>
+              <div class="security-actions">
+                <button class="action-btn" (click)="showChangePasswordModal()">
+                  <mat-icon>lock</mat-icon>
+                  Change Password
+                </button>
+                <button class="action-btn secondary" (click)="showTwoFactorAuth()">
+                  <mat-icon>security</mat-icon>
+                  Two-Factor Authentication
+                </button>
+              </div>
+            </div>
+            
+            <!-- Preferences Section -->
+            <div class="setting-section">
+              <h3>Preferences</h3>
+              <div class="preferences">
+                <div class="preference-item">
+                  <label>Email Notifications</label>
+                  <mat-slide-toggle [(ngModel)]="preferences.emailNotifications">
+                    Receive email notifications
+                  </mat-slide-toggle>
+                </div>
+                <div class="preference-item">
+                  <label>Task Reminders</label>
+                  <mat-slide-toggle [(ngModel)]="preferences.taskReminders">
+                    Get task reminders
+                  </mat-slide-toggle>
+                </div>
+                <div class="preference-item">
+                  <label>Theme</label>
+                  <mat-form-field>
+                    <mat-select [(ngModel)]="preferences.theme">
+                      <mat-option value="light">Light</mat-option>
+                      <mat-option value="dark">Dark</mat-option>
+                      <mat-option value="auto">Auto</mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Profile Edit Modal -->
+        <div class="modal-overlay" *ngIf="showProfileEditModal" (click)="closeProfileEditModal()">
+          <div class="modal-content" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+              <h3>Edit Profile</h3>
+              <button class="close-btn" (click)="closeProfileEditModal()">
+                <mat-icon>close</mat-icon>
+              </button>
+            </div>
+            <div class="modal-body">
+              <form [formGroup]="profileForm" (ngSubmit)="updateProfile()">
+                <div class="form-group">
+                  <label for="profileName">Name</label>
+                  <input type="text" id="profileName" formControlName="name" placeholder="Enter your name">
+                </div>
+                <div class="form-group">
+                  <label for="profileEmail">Email</label>
+                  <input type="email" id="profileEmail" formControlName="email" placeholder="Enter your email">
+                </div>
+                <div class="form-actions">
+                  <button type="button" class="btn-secondary" (click)="closeProfileEditModal()">Cancel</button>
+                  <button type="submit" class="btn-primary" [disabled]="profileForm.invalid || updatingProfile">
+                    {{ updatingProfile ? 'Updating...' : 'Update Profile' }}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- Change Password Modal -->
+        <div class="modal-overlay" *ngIf="showPasswordModal" (click)="closePasswordModal()">
+          <div class="modal-content" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+              <h3>Change Password</h3>
+              <button class="close-btn" (click)="closePasswordModal()">
+                <mat-icon>close</mat-icon>
+              </button>
+            </div>
+            <div class="modal-body">
+              <form [formGroup]="passwordForm" (ngSubmit)="changePassword()">
+                <div class="form-group">
+                  <label for="currentPassword">Current Password</label>
+                  <input type="password" id="currentPassword" formControlName="currentPassword" placeholder="Enter current password">
+                </div>
+                <div class="form-group">
+                  <label for="newPassword">New Password</label>
+                  <input type="password" id="newPassword" formControlName="newPassword" placeholder="Enter new password">
+                </div>
+                <div class="form-group">
+                  <label for="confirmPassword">Confirm New Password</label>
+                  <input type="password" id="confirmPassword" formControlName="confirmPassword" placeholder="Confirm new password">
+                </div>
+                <div class="form-actions">
+                  <button type="button" class="btn-secondary" (click)="closePasswordModal()">Cancel</button>
+                  <button type="submit" class="btn-primary" [disabled]="passwordForm.invalid || changingPassword">
+                    {{ changingPassword ? 'Changing...' : 'Change Password' }}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         </div>

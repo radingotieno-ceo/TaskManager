@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import com.taskmanager.service.UserService;
-import com.taskmanager.dto.RegisterRequest;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 @SpringBootApplication
@@ -65,34 +64,7 @@ public class TaskManagementApplication implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         System.out.println("🚀 Starting TaskManagementApplication...");
-        
-        // Create a test user on startup if it doesn't exist
-        try {
-            System.out.println("🔍 Checking if startup test user exists...");
-            if (!userService.existsByEmail("startup@test.com")) {
-                System.out.println("📝 Creating startup test user...");
-                RegisterRequest testUser = new RegisterRequest();
-                testUser.setName("Startup Test User");
-                testUser.setEmail("startup@test.com");
-                testUser.setPassword("password123");
-                testUser.setRole("USER");
-                
-                userService.createUser(testUser);
-                System.out.println("✅ Created startup test user: startup@test.com");
-            } else {
-                System.out.println("✅ Startup test user already exists: startup@test.com");
-            }
-            
-            // Test if we can find any users
-            System.out.println("🔍 Testing user lookup...");
-            boolean testExists = userService.existsByEmail("test@karooth.com");
-            System.out.println("test@karooth.com exists: " + testExists);
-            
-        } catch (Exception e) {
-            System.err.println("❌ Error during startup: " + e.getMessage());
-            e.printStackTrace();
-        }
-        
+        System.out.println("📊 Database initialization will be handled by DatabaseInitializationService");
         System.out.println("🎯 TaskManagementApplication startup complete!");
     }
 }

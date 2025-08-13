@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
-import { map, catchError, tap } from 'rxjs/operators';
 import { Router } from '@angular/router';
+import { tap, catchError } from 'rxjs/operators';
 import { LoginRequest, RegisterRequest, AuthResponse, User } from '../models/user.model';
 
 @Injectable({
@@ -84,6 +84,37 @@ export class AuthService {
     return this.currentUserSubject.value;
   }
 
+  updateCurrentUser(user: User): void {
+    this.currentUserSubject.next(user);
+  }
+
+  updateProfile(profileData: { name: string; email: string; profilePhotoUrl?: string }): Observable<User> {
+    return this.http.put<User>(`${this.apiUrl}/auth/profile/update`, profileData, { headers: this.getHeaders() });
+  }
+
+  changePassword(passwordData: { email: string; currentPassword: string; newPassword: string; confirmPassword: string }): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/auth/profile/change-password`, passwordData, { headers: this.getHeaders() });
+  }
+
+  uploadProfilePhoto(file: File): Observable<any> {
+    console.log('🔍 AuthService: Uploading profile photo, file:', file.name, 'size:', file.size);
+    const formData = new FormData();
+    formData.append('file', file);
+    console.log('🔍 AuthService: FormData created, URL:', `${this.apiUrl}/auth/profile/upload-photo`);
+    
+    return this.http.post<any>(`${this.apiUrl}/auth/profile/upload-photo`, formData, { 
+      headers: new HttpHeaders({
+        'Authorization': `Bearer ${this.getToken()}`
+      })
+    }).pipe(
+      tap(response => console.log('✅ AuthService: Upload response:', response)),
+      catchError(error => {
+        console.error('❌ AuthService: Upload error:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
   private setAuthData(token: string, user: User): void {
     localStorage.setItem('token', token);
     localStorage.setItem('user', JSON.stringify(user));
@@ -110,6 +141,16 @@ export class AuthService {
       default:
         this.router.navigate(['/dashboard']);
     }
+  }
+
+  private getHeaders(): HttpHeaders {
+    const token = this.getToken();
+    if (token) {
+      return new HttpHeaders({
+        'Authorization': `Bearer ${token}`
+      });
+    }
+    return new HttpHeaders();
   }
 
   // Test backend connection method

@@ -23,6 +23,7 @@ import { MatListModule } from '@angular/material/list';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
@@ -64,7 +65,8 @@ import { DashboardComponent } from './components/dashboard/dashboard.component';
     MatListModule,
     MatProgressSpinnerModule,
     MatTabsModule,
-    MatDividerModule
+    MatDividerModule,
+    MatSlideToggleModule
   ],
   providers: [
     {

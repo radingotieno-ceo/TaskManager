@@ -3,6 +3,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { User } from '../models/user.model';
 import { AuthService } from './auth.service';
+import { map } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
@@ -28,6 +29,21 @@ export class UserService {
     return this.http.get<User[]>(`${this.apiUrl}/admin/users`, { headers: this.getHeaders() });
   }
 
+  // Get all users for managers (simplified approach)
+  getAllUsersForManager(): Observable<User[]> {
+    console.log('🔍 UserService: Calling getAllUsersForManager()');
+    console.log('🔍 UserService: URL:', `${this.apiUrl}/auth/users`);
+    console.log('🔍 UserService: Headers:', this.getHeaders());
+    
+    return this.http.get<User[]>(`${this.apiUrl}/auth/users`, { headers: this.getHeaders() })
+      .pipe(
+        map(users => {
+          console.log('✅ UserService: Received users from backend:', users);
+          return users;
+        })
+      );
+  }
+
   // Get all managers (Admin only)
   getAllManagers(): Observable<User[]> {
     return this.http.get<User[]>(`${this.apiUrl}/admin/users/managers`, { headers: this.getHeaders() });
@@ -40,7 +56,10 @@ export class UserService {
 
   // Get available users for assignment (Manager/Admin)
   getAvailableUsers(): Observable<User[]> {
-    return this.http.get<User[]>(`${this.apiUrl}/tasks/assignment/available-users`, { headers: this.getHeaders() });
+    return this.http.get<User[]>(`${this.apiUrl}/auth/users`, { headers: this.getHeaders() })
+      .pipe(
+        map(users => users.filter(user => user.role === 'USER'))
+      );
   }
 
   // Update user role (Admin only)

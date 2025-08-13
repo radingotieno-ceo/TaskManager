@@ -16,6 +16,3 @@ INSERT INTO projects (name, description, priority, due_date, status) VALUES
 ('Database Migration', 'Migrate legacy database to new cloud infrastructure', 'MEDIUM', DATEADD('MONTH', 1, CURRENT_DATE()), 'TODO'),
 ('Security Audit', 'Conduct comprehensive security audit of all systems', 'HIGH', DATEADD('MONTH', 1, CURRENT_DATE()), 'TODO'),
 ('Marketing Campaign', 'Launch new marketing campaign for Q4 product release', 'MEDIUM', DATEADD('MONTH', 2, CURRENT_DATE()), 'IN_PROGRESS');
-
--- Add a dummy statement to make the file valid SQL
-SELECT 1;

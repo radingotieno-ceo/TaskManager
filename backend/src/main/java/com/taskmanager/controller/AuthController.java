@@ -16,6 +16,18 @@ import jakarta.validation.Valid;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.UnsupportedJwtException;
+import java.util.List;
+import com.taskmanager.dto.UpdateProfileRequest;
+import com.taskmanager.dto.ChangePasswordRequest;
+import com.taskmanager.dto.MessageResponse;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.http.HttpHeaders;
+import java.io.File;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -294,6 +306,446 @@ public class AuthController {
         } catch (Exception e) {
             log.error("Error testing stored hash: {}", e.getMessage());
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/test-jwt")
+    public ResponseEntity<String> testJwt() {
+        try {
+            log.info("Testing JWT authentication...");
+            return ResponseEntity.ok("JWT authentication is working! Current time: " + System.currentTimeMillis());
+        } catch (Exception e) {
+            log.error("JWT test endpoint error: {}", e.getMessage());
+            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/test-jwt-details")
+    public ResponseEntity<String> testJwtDetails() {
+        try {
+            log.info("Testing JWT authentication with details...");
+            
+            // Get current authentication
+            var auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+            
+            if (auth == null) {
+                return ResponseEntity.status(401).body("No authentication found");
+            }
+            
+            String result = String.format("""
+                === JWT AUTHENTICATION TEST ===
+                Authenticated: %s
+                Principal: %s
+                Authorities: %s
+                Details: %s
+                Current time: %s
+                """, 
+                auth.isAuthenticated(),
+                auth.getPrincipal(),
+                auth.getAuthorities(),
+                auth.getDetails(),
+                System.currentTimeMillis()
+            );
+            
+            log.info("JWT authentication test successful");
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            log.error("JWT details test endpoint error: {}", e.getMessage());
+            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/debug-jwt")
+    public ResponseEntity<String> debugJwt(@RequestHeader(value = "Authorization", required = false) String authHeader) {
+        try {
+            log.info("=== JWT DEBUG ENDPOINT ===");
+            log.info("Authorization header: {}", authHeader);
+            
+            StringBuilder result = new StringBuilder();
+            result.append("=== JWT DEBUG RESULTS ===\n");
+            result.append("Current time: ").append(System.currentTimeMillis()).append("\n\n");
+            
+            // Check Authorization header
+            if (authHeader == null) {
+                result.append("❌ Authorization header is missing\n");
+                return ResponseEntity.status(401).body(result.toString());
+            }
+            
+            if (!authHeader.startsWith("Bearer ")) {
+                result.append("❌ Authorization header does not start with 'Bearer '\n");
+                result.append("Header value: ").append(authHeader).append("\n");
+                return ResponseEntity.status(401).body(result.toString());
+            }
+            
+            String token = authHeader.substring(7);
+            result.append("✅ Authorization header format is correct\n");
+            result.append("Token length: ").append(token.length()).append(" characters\n");
+            
+            // Try to parse the token
+            try {
+                String username = jwtUtil.getUsernameFromToken(token);
+                result.append("✅ Username extracted from token: ").append(username).append("\n");
+                
+                // Check if user exists
+                if (userService.existsByEmail(username)) {
+                    result.append("✅ User exists in database\n");
+                    
+                    // Load user details
+                    UserDetails userDetails = userService.loadUserByUsername(username);
+                    result.append("✅ User details loaded successfully\n");
+                    result.append("User authorities: ").append(userDetails.getAuthorities()).append("\n");
+                    
+                    // Validate token
+                    boolean isValid = jwtUtil.validateToken(token, userDetails);
+                    result.append("Token validation result: ").append(isValid ? "✅ VALID" : "❌ INVALID").append("\n");
+                    
+                    if (isValid) {
+                        result.append("🎉 JWT authentication is working correctly!\n");
+                    } else {
+                        result.append("❌ JWT token validation failed\n");
+                    }
+                } else {
+                    result.append("❌ User not found in database: ").append(username).append("\n");
+                }
+                
+            } catch (ExpiredJwtException e) {
+                result.append("❌ JWT token has expired: ").append(e.getMessage()).append("\n");
+            } catch (MalformedJwtException e) {
+                result.append("❌ JWT token is malformed: ").append(e.getMessage()).append("\n");
+            } catch (UnsupportedJwtException e) {
+                result.append("❌ JWT token is unsupported: ").append(e.getMessage()).append("\n");
+            } catch (IllegalArgumentException e) {
+                result.append("❌ JWT token parsing error: ").append(e.getMessage()).append("\n");
+            } catch (Exception e) {
+                result.append("❌ Unexpected error: ").append(e.getMessage()).append("\n");
+            }
+            
+            log.info("JWT debug completed");
+            return ResponseEntity.ok(result.toString());
+            
+        } catch (Exception e) {
+            log.error("JWT debug endpoint error: {}", e.getMessage());
+            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/list-users")
+    public ResponseEntity<String> listAllUsers() {
+        try {
+            log.info("Listing all users in database...");
+            
+            StringBuilder result = new StringBuilder();
+            result.append("=== DATABASE USERS LIST ===\n");
+            result.append("Current time: ").append(System.currentTimeMillis()).append("\n\n");
+            
+            // Get all users from repository
+            var users = userService.getAllUsers();
+            
+            if (users.isEmpty()) {
+                result.append("❌ No users found in database\n");
+                result.append("This might indicate:\n");
+                result.append("- Database is empty\n");
+                result.append("- Data initialization failed\n");
+                result.append("- Wrong database connection\n");
+            } else {
+                result.append("✅ Found ").append(users.size()).append(" user(s) in database:\n\n");
+                
+                for (int i = 0; i < users.size(); i++) {
+                    var user = users.get(i);
+                    result.append(i + 1).append(". ").append(user.getName()).append("\n");
+                    result.append("   Email: ").append(user.getEmail()).append("\n");
+                    result.append("   Role: ").append(user.getRole()).append("\n");
+                    result.append("   ID: ").append(user.getId()).append("\n");
+                    result.append("\n");
+                }
+                
+                // Test password verification for known users
+                result.append("=== PASSWORD VERIFICATION TESTS ===\n");
+                String testPassword = "password123";
+                
+                for (var user : users) {
+                    try {
+                        UserDetails userDetails = userService.loadUserByUsername(user.getEmail());
+                        boolean passwordMatches = passwordEncoder.matches(testPassword, userDetails.getPassword());
+                        result.append(user.getEmail()).append(" - Password 'password123' matches: ")
+                              .append(passwordMatches ? "✅ YES" : "❌ NO").append("\n");
+                    } catch (Exception e) {
+                        result.append(user.getEmail()).append(" - Error testing password: ").append(e.getMessage()).append("\n");
+                    }
+                }
+            }
+            
+            log.info("User list completed. Found {} users", users.size());
+            return ResponseEntity.ok(result.toString());
+            
+        } catch (Exception e) {
+            log.error("Error listing users: {}", e.getMessage());
+            return ResponseEntity.badRequest().body("Error listing users: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/users")
+    public ResponseEntity<List<UserDto>> getUsersAsJson() {
+        try {
+            log.info("Getting users as JSON for frontend...");
+            List<UserDto> users = userService.getAllUsers();
+            log.info("Returning {} users as JSON", users.size());
+            return ResponseEntity.ok(users);
+        } catch (Exception e) {
+            log.error("Error getting users as JSON: {}", e.getMessage());
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @PutMapping("/profile/update")
+    public ResponseEntity<UserDto> updateProfile(@RequestBody UpdateProfileRequest request) {
+        try {
+            log.info("Updating profile for user: {}", request.getEmail());
+            UserDto updatedUser = userService.updateProfile(request);
+            log.info("Profile updated successfully for user: {}", request.getEmail());
+            return ResponseEntity.ok(updatedUser);
+        } catch (Exception e) {
+            log.error("Error updating profile: {}", e.getMessage());
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @PutMapping("/profile/change-password")
+    public ResponseEntity<MessageResponse> changePassword(@RequestBody ChangePasswordRequest request) {
+        try {
+            log.info("Changing password for user: {}", request.getEmail());
+            userService.changePassword(request);
+            log.info("Password changed successfully for user: {}", request.getEmail());
+            return ResponseEntity.ok(new MessageResponse("Password changed successfully"));
+        } catch (Exception e) {
+            log.error("Error changing password: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(new MessageResponse("Error changing password: " + e.getMessage()));
+        }
+    }
+
+    @PostMapping("/profile/upload-photo")
+    public ResponseEntity<MessageResponse> uploadProfilePhoto(@RequestParam("file") MultipartFile file) {
+        try {
+            log.info("Uploading profile photo, file size: {} bytes", file.getSize());
+            String photoUrl = userService.uploadProfilePhoto(file);
+            log.info("Profile photo uploaded successfully: {}", photoUrl);
+            return ResponseEntity.ok(new MessageResponse("Profile photo uploaded successfully", photoUrl));
+        } catch (Exception e) {
+            log.error("Error uploading profile photo: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(new MessageResponse("Error uploading photo: " + e.getMessage()));
+        }
+    }
+
+    @GetMapping("/uploads/profile-photos/{filename}")
+    public ResponseEntity<Resource> getProfilePhoto(@PathVariable String filename) {
+        try {
+            String filePath = "uploads/profile-photos/" + filename;
+            File file = new File(filePath);
+            
+            if (!file.exists()) {
+                log.warn("Profile photo not found: {}", filePath);
+                return ResponseEntity.notFound().build();
+            }
+            
+            Resource resource = new FileSystemResource(file);
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + filename + "\"")
+                    .body(resource);
+        } catch (Exception e) {
+            log.error("Error serving profile photo: {}", e.getMessage());
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @GetMapping("/check-user/{email}")
+    public ResponseEntity<String> checkSpecificUser(@PathVariable String email) {
+        try {
+            log.info("Checking specific user: {}", email);
+            
+            StringBuilder result = new StringBuilder();
+            result.append("=== USER DETAILS CHECK ===\n");
+            result.append("Email: ").append(email).append("\n");
+            result.append("Current time: ").append(System.currentTimeMillis()).append("\n\n");
+            
+            // Check if user exists
+            boolean exists = userService.existsByEmail(email);
+            result.append("User exists: ").append(exists ? "✅ YES" : "❌ NO").append("\n\n");
+            
+            if (exists) {
+                try {
+                    // Get user details
+                    UserDto user = userService.findByEmail(email);
+                    result.append("=== USER DETAILS ===\n");
+                    result.append("ID: ").append(user.getId()).append("\n");
+                    result.append("Name: ").append(user.getName()).append("\n");
+                    result.append("Email: ").append(user.getEmail()).append("\n");
+                    result.append("Role: ").append(user.getRole()).append("\n\n");
+                    
+                    // Load UserDetails for authentication testing
+                    UserDetails userDetails = userService.loadUserByUsername(email);
+                    result.append("=== AUTHENTICATION DETAILS ===\n");
+                    result.append("Username: ").append(userDetails.getUsername()).append("\n");
+                    result.append("Authorities: ").append(userDetails.getAuthorities()).append("\n");
+                    result.append("Account non-expired: ").append(userDetails.isAccountNonExpired()).append("\n");
+                    result.append("Account non-locked: ").append(userDetails.isAccountNonLocked()).append("\n");
+                    result.append("Credentials non-expired: ").append(userDetails.isCredentialsNonExpired()).append("\n");
+                    result.append("Account enabled: ").append(userDetails.isEnabled()).append("\n\n");
+                    
+                    // Test password verification
+                    String testPassword = "password123";
+                    boolean passwordMatches = passwordEncoder.matches(testPassword, userDetails.getPassword());
+                    result.append("=== PASSWORD TEST ===\n");
+                    result.append("Test password: ").append(testPassword).append("\n");
+                    result.append("Password matches: ").append(passwordMatches ? "✅ YES" : "❌ NO").append("\n");
+                    result.append("Stored hash: ").append(userDetails.getPassword()).append("\n");
+                    
+                } catch (Exception e) {
+                    result.append("❌ Error loading user details: ").append(e.getMessage()).append("\n");
+                }
+            }
+            
+            log.info("User check completed for: {}", email);
+            return ResponseEntity.ok(result.toString());
+            
+        } catch (Exception e) {
+            log.error("Error checking user {}: {}", email, e.getMessage());
+            return ResponseEntity.badRequest().body("Error checking user: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/create-default-users")
+    public ResponseEntity<String> createDefaultUsers() {
+        try {
+            log.info("Manually creating default users...");
+            
+            StringBuilder result = new StringBuilder();
+            result.append("=== CREATING DEFAULT USERS ===\n");
+            result.append("Current time: ").append(System.currentTimeMillis()).append("\n\n");
+            
+            // Create default users
+            String[] userData = {
+                "Test Manager,test@karooth.com,MANAGER",
+                "Test User,user@karooth.com,USER", 
+                "Admin User,admin@karooth.com,ADMIN"
+            };
+            
+            int createdCount = 0;
+            int existingCount = 0;
+            
+            for (String userInfo : userData) {
+                String[] parts = userInfo.split(",");
+                String name = parts[0];
+                String email = parts[1];
+                String role = parts[2];
+                
+                if (!userService.existsByEmail(email)) {
+                    try {
+                        RegisterRequest request = new RegisterRequest(name, email, "password123", role);
+                        UserDto user = userService.createUser(request);
+                        result.append("✅ Created user: ").append(user.getEmail()).append(" (ID: ").append(user.getId()).append(")\n");
+                        createdCount++;
+                    } catch (Exception e) {
+                        result.append("❌ Error creating user ").append(email).append(": ").append(e.getMessage()).append("\n");
+                    }
+                } else {
+                    result.append("ℹ️  User already exists: ").append(email).append("\n");
+                    existingCount++;
+                }
+            }
+            
+            result.append("\n=== SUMMARY ===\n");
+            result.append("Users created: ").append(createdCount).append("\n");
+            result.append("Users already existed: ").append(existingCount).append("\n");
+            result.append("Total users in database: ").append(userService.getAllUsers().size()).append("\n");
+            
+            log.info("Default user creation completed. Created: {}, Existing: {}", createdCount, existingCount);
+            return ResponseEntity.ok(result.toString());
+            
+        } catch (Exception e) {
+            log.error("Error creating default users: {}", e.getMessage());
+            return ResponseEntity.badRequest().body("Error creating default users: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/database-status")
+    public ResponseEntity<String> getDatabaseStatus() {
+        try {
+            log.info("Checking database status...");
+            
+            StringBuilder result = new StringBuilder();
+            result.append("=== DATABASE STATUS ===\n");
+            result.append("Current time: ").append(System.currentTimeMillis()).append("\n\n");
+            
+            // Get all users
+            var users = userService.getAllUsers();
+            result.append("Total users in database: ").append(users.size()).append("\n\n");
+            
+            if (users.isEmpty()) {
+                result.append("❌ No users found in database\n");
+                result.append("This indicates:\n");
+                result.append("- Database is empty\n");
+                result.append("- Data initialization failed\n");
+                result.append("- Need to create default users\n\n");
+                result.append("To create default users, call: POST /api/auth/create-default-users\n");
+            } else {
+                result.append("✅ Users found in database:\n");
+                for (int i = 0; i < users.size(); i++) {
+                    var user = users.get(i);
+                    result.append(i + 1).append(". ").append(user.getName()).append(" (").append(user.getEmail()).append(") - ").append(user.getRole()).append("\n");
+                }
+                
+                // Check for expected users
+                result.append("\n=== EXPECTED USERS CHECK ===\n");
+                String[] expectedEmails = {"test@karooth.com", "user@karooth.com", "admin@karooth.com"};
+                for (String email : expectedEmails) {
+                    boolean exists = userService.existsByEmail(email);
+                    result.append(email).append(": ").append(exists ? "✅ FOUND" : "❌ MISSING").append("\n");
+                }
+            }
+            
+            log.info("Database status check completed");
+            return ResponseEntity.ok(result.toString());
+            
+        } catch (Exception e) {
+            log.error("Error checking database status: {}", e.getMessage());
+            return ResponseEntity.badRequest().body("Error checking database status: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/database-full-status")
+    public ResponseEntity<String> getFullDatabaseStatus() {
+        try {
+            log.info("Checking full database status...");
+            
+            StringBuilder result = new StringBuilder();
+            result.append("=== FULL DATABASE STATUS ===\n");
+            result.append("Current time: ").append(System.currentTimeMillis()).append("\n\n");
+            
+            // Users
+            var users = userService.getAllUsers();
+            result.append("=== USERS ===\n");
+            result.append("Total users: ").append(users.size()).append("\n");
+            for (int i = 0; i < users.size(); i++) {
+                var user = users.get(i);
+                result.append(i + 1).append(". ").append(user.getName()).append(" (").append(user.getEmail()).append(") - ").append(user.getRole()).append("\n");
+            }
+            result.append("\n");
+            
+            // Summary
+            result.append("=== SUMMARY ===\n");
+            result.append("Database is using: ").append("File-based H2 (persistent)").append("\n");
+            result.append("Data will persist between server restarts: ✅ YES\n");
+            result.append("Database file location: ./data/taskmanager.mv.db\n");
+            result.append("\n");
+            result.append("Projects and tasks will be created automatically on first startup.\n");
+            result.append("Check the server logs for database initialization details.\n");
+            
+            log.info("Full database status check completed");
+            return ResponseEntity.ok(result.toString());
+            
+        } catch (Exception e) {
+            log.error("Error checking full database status: {}", e.getMessage());
+            return ResponseEntity.badRequest().body("Error checking full database status: " + e.getMessage());
         }
     }
 }

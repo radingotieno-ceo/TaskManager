@@ -1,16 +1,18 @@
 package com.taskmanager.service;
 
-import com.taskmanager.dto.CreateTaskDto;
 import com.taskmanager.dto.TaskDto;
+import com.taskmanager.dto.CreateTaskDto;
+import com.taskmanager.dto.CreateAndAssignTaskDto;
 import com.taskmanager.entity.Task;
-import com.taskmanager.entity.Project;
-import com.taskmanager.entity.User;
 import com.taskmanager.entity.TaskStatus;
 import com.taskmanager.entity.TaskPriority;
+import com.taskmanager.entity.Project;
+import com.taskmanager.entity.User;
 import com.taskmanager.entity.Role;
 import com.taskmanager.repository.TaskRepository;
 import com.taskmanager.repository.ProjectRepository;
 import com.taskmanager.repository.UserRepository;
+import com.taskmanager.service.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
@@ -20,6 +22,9 @@ import jakarta.persistence.EntityNotFoundException;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.access.AccessDeniedException;
 
 @Service
 @Transactional
@@ -69,6 +74,46 @@ public class TaskService {
         );
         
         Task savedTask = taskRepository.save(task);
+        return new TaskDto(savedTask);
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public TaskDto createAndAssignTask(CreateAndAssignTaskDto createAndAssignTaskDto) {
+        // Validate project exists
+        Project project = projectRepository.findById(createAndAssignTaskDto.getProjectId())
+                .orElseThrow(() -> new EntityNotFoundException("Project not found with id: " + createAndAssignTaskDto.getProjectId()));
+        
+        // Validate user exists
+        User user = userRepository.findById(createAndAssignTaskDto.getUserId())
+                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + createAndAssignTaskDto.getUserId()));
+        
+        // Validate due date is in future
+        if (!createAndAssignTaskDto.getDueDate().isAfter(LocalDate.now())) {
+            throw new IllegalArgumentException("Due date must be in the future");
+        }
+        
+        // Create task with priority
+        Task task = new Task(
+            createAndAssignTaskDto.getTitle(),
+            createAndAssignTaskDto.getDescription(),
+            createAndAssignTaskDto.getDueDate(),
+            project,
+            TaskPriority.valueOf(createAndAssignTaskDto.getPriority().toUpperCase())
+        );
+        
+        // Assign to user
+        task.setAssignedUser(user);
+        
+        Task savedTask = taskRepository.save(task);
+        
+        // Send email notification
+        try {
+            emailService.sendTaskAssignmentEmail(savedTask, user);
+        } catch (Exception e) {
+            // Log error but don't fail the operation
+            System.err.println("Failed to send email notification: " + e.getMessage());
+        }
+        
         return new TaskDto(savedTask);
     }
     
@@ -173,7 +218,17 @@ public class TaskService {
     }
     
     public List<TaskDto> getAssignedTasks() {
-        return taskRepository.findByAssignedUserIsNotNull().stream()
+        // Get the current authenticated user
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new AccessDeniedException("User not authenticated");
+        }
+        
+        String userEmail = authentication.getName();
+        User currentUser = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new EntityNotFoundException("Current user not found"));
+        
+        return taskRepository.findByAssignedUser(currentUser).stream()
                 .map(TaskDto::new)
                 .collect(Collectors.toList());
     }

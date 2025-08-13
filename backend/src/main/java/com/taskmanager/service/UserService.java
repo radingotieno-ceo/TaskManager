@@ -15,6 +15,16 @@ import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
+import java.util.stream.Collectors;
+import com.taskmanager.dto.UpdateProfileRequest;
+import com.taskmanager.dto.ChangePasswordRequest;
+import com.taskmanager.exception.EntityNotFoundException;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.File;
+import java.io.IOException;
+
 @Service
 @Transactional
 public class UserService implements UserDetailsService {
@@ -95,6 +105,109 @@ public class UserService implements UserDetailsService {
         boolean exists = userRepository.existsByEmail(email);
         log.info("User exists: {} for email: {}", exists, email);
         return exists;
+    }
+
+    public List<UserDto> getAllUsers() {
+        log.info("Getting all users from database");
+        List<User> users = userRepository.findAll();
+        List<UserDto> userDtos = users.stream()
+                .map(UserDto::new)
+                .collect(Collectors.toList());
+        log.info("Found {} users in database", userDtos.size());
+        return userDtos;
+    }
+
+    public UserDto updateProfile(UpdateProfileRequest request) {
+        log.info("Updating profile for user: {}", request.getEmail());
+        
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new EntityNotFoundException("User not found with email: " + request.getEmail()));
+        
+        user.setName(request.getName());
+        if (request.getProfilePhotoUrl() != null) {
+            user.setProfilePhotoUrl(request.getProfilePhotoUrl());
+        }
+        
+        User savedUser = userRepository.save(user);
+        log.info("Profile updated successfully for user: {}", request.getEmail());
+        return new UserDto(savedUser);
+    }
+
+    public void changePassword(ChangePasswordRequest request) {
+        log.info("Changing password for user: {}", request.getEmail());
+        
+        // Validate passwords match
+        if (!request.getNewPassword().equals(request.getConfirmPassword())) {
+            throw new IllegalArgumentException("New password and confirm password do not match");
+        }
+        
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new EntityNotFoundException("User not found with email: " + request.getEmail()));
+        
+        // Validate current password
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+            throw new IllegalArgumentException("Current password is incorrect");
+        }
+        
+        // Encode and set new password
+        String encodedNewPassword = passwordEncoder.encode(request.getNewPassword());
+        user.setPassword(encodedNewPassword);
+        
+        userRepository.save(user);
+        log.info("Password changed successfully for user: {}", request.getEmail());
+    }
+
+    public String uploadProfilePhoto(MultipartFile file) {
+        log.info("Uploading profile photo, file size: {} bytes", file.getSize());
+        
+        // Validate file
+        if (file.isEmpty()) {
+            throw new IllegalArgumentException("File is empty");
+        }
+        
+        // Validate file type
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            throw new IllegalArgumentException("File must be an image");
+        }
+        
+        // Validate file size (max 5MB)
+        if (file.getSize() > 5 * 1024 * 1024) {
+            throw new IllegalArgumentException("File size must be less than 5MB");
+        }
+        
+        try {
+            // Generate unique filename
+            String originalFilename = file.getOriginalFilename();
+            String extension = originalFilename != null ? originalFilename.substring(originalFilename.lastIndexOf(".")) : ".jpg";
+            String filename = "profile_" + System.currentTimeMillis() + extension;
+            
+            // Create uploads directory if it doesn't exist
+            String uploadDir = "uploads/profile-photos";
+            File dir = new File(uploadDir);
+            if (!dir.exists()) {
+                boolean created = dir.mkdirs();
+                if (!created) {
+                    log.error("Failed to create upload directory: {}", uploadDir);
+                    throw new RuntimeException("Failed to create upload directory");
+                }
+                log.info("Created upload directory: {}", uploadDir);
+            }
+            
+            // Save file
+            String filePath = uploadDir + "/" + filename;
+            File dest = new File(filePath);
+            file.transferTo(dest);
+            
+            // Return the URL (for now, just return the filename)
+            String photoUrl = "/api/auth/uploads/profile-photos/" + filename;
+            log.info("Profile photo uploaded successfully: {}", photoUrl);
+            return photoUrl;
+            
+        } catch (IOException e) {
+            log.error("Error saving profile photo: {}", e.getMessage());
+            throw new RuntimeException("Error saving profile photo", e);
+        }
     }
 }
 

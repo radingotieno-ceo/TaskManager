@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { Task, CreateTaskRequest, UpdateTaskRequest, AssignTaskRequest } from '../models/task.model';
 import { User } from '../models/user.model';
 import { AuthService } from './auth.service';
+import { map } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
@@ -86,15 +87,26 @@ export class TaskService {
 
   // Task Assignment specific endpoints
   getUnassignedTasks(): Observable<Task[]> {
-    return this.http.get<Task[]>(`${this.apiUrl}/tasks/assignment/unassigned`, { headers: this.getHeaders() });
+    return this.http.get<Task[]>(`${this.apiUrl}/tasks`, { headers: this.getHeaders() })
+      .pipe(
+        map(tasks => tasks.filter(task => !task.assignedUser))
+      );
   }
 
   getAvailableUsers(): Observable<User[]> {
-    return this.http.get<User[]>(`${this.apiUrl}/tasks/assignment/available-users`, { headers: this.getHeaders() });
+    return this.http.get<User[]>(`${this.apiUrl}/auth/list-users`, { headers: this.getHeaders() })
+      .pipe(
+        map(users => users.filter(user => user.role === 'USER'))
+      );
   }
 
   assignTaskToUser(taskId: number, userId: number): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/tasks/assignment/${taskId}/assign/${userId}`, {}, { headers: this.getHeaders() });
+    return this.http.patch<Task>(`${this.apiUrl}/tasks/${taskId}/assign`, { userId }, { headers: this.getHeaders() });
+  }
+
+  // New method for creating and assigning task in one operation
+  createAndAssignTask(taskData: any): Observable<Task> {
+    return this.http.post<Task>(`${this.apiUrl}/tasks/create-and-assign`, taskData, { headers: this.getHeaders() });
   }
 
   getTasksAssignedToUser(userId: number): Observable<Task[]> {

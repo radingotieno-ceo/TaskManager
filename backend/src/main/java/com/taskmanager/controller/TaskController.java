@@ -2,6 +2,7 @@ package com.taskmanager.controller;
 
 import com.taskmanager.dto.TaskDto;
 import com.taskmanager.dto.CreateTaskDto;
+import com.taskmanager.dto.CreateAndAssignTaskDto;
 import com.taskmanager.service.TaskService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -35,6 +36,12 @@ public class TaskController {
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<TaskDto> createTask(@Valid @RequestBody CreateTaskDto createTaskDto) {
         return ResponseEntity.ok(taskService.createTask(createTaskDto));
+    }
+
+    @PostMapping("/create-and-assign")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<TaskDto> createAndAssignTask(@Valid @RequestBody CreateAndAssignTaskDto createAndAssignTaskDto) {
+        return ResponseEntity.ok(taskService.createAndAssignTask(createAndAssignTaskDto));
     }
 
     @PutMapping("/{id}")
