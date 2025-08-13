@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import org.hibernate.annotations.CreationTimestamp;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
@@ -23,6 +24,17 @@ public class Project {
     @Column(length = 1000)
     private String description;
     
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ProjectPriority priority = ProjectPriority.MEDIUM;
+    
+    @Column(nullable = false)
+    private LocalDate dueDate;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ProjectStatus status = ProjectStatus.IN_PROGRESS;
+    
     @CreationTimestamp
     @Column(nullable = false)
     private LocalDateTime createdAt;
@@ -36,6 +48,13 @@ public class Project {
     public Project(String name, String description) {
         this.name = name;
         this.description = description;
+    }
+    
+    public Project(String name, String description, LocalDate dueDate, ProjectPriority priority) {
+        this.name = name;
+        this.description = description;
+        this.dueDate = dueDate;
+        this.priority = priority;
     }
     
     // Getters and setters
@@ -61,6 +80,30 @@ public class Project {
     
     public void setDescription(String description) {
         this.description = description;
+    }
+    
+    public ProjectPriority getPriority() {
+        return priority;
+    }
+    
+    public void setPriority(ProjectPriority priority) {
+        this.priority = priority;
+    }
+    
+    public LocalDate getDueDate() {
+        return dueDate;
+    }
+    
+    public void setDueDate(LocalDate dueDate) {
+        this.dueDate = dueDate;
+    }
+    
+    public ProjectStatus getStatus() {
+        return status;
+    }
+    
+    public void setStatus(ProjectStatus status) {
+        this.status = status;
     }
     
     public LocalDateTime getCreatedAt() {

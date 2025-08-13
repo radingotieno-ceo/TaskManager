@@ -3,13 +3,11 @@ package com.taskmanager.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import com.taskmanager.entity.TaskStatus;
 
 @Entity
 @Table(name = "tasks")
@@ -29,6 +27,10 @@ public class Task {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private TaskStatus status = TaskStatus.TODO;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private TaskPriority priority = TaskPriority.MEDIUM;
     
     @Future(message = "Due date must be in the future")
     @Column(nullable = false)
@@ -56,6 +58,14 @@ public class Task {
         this.description = description;
         this.dueDate = dueDate;
         this.project = project;
+    }
+    
+    public Task(String title, String description, LocalDate dueDate, Project project, TaskPriority priority) {
+        this.title = title;
+        this.description = description;
+        this.dueDate = dueDate;
+        this.project = project;
+        this.priority = priority;
     }
     
     // Getters and setters
@@ -89,6 +99,14 @@ public class Task {
     
     public void setStatus(TaskStatus status) {
         this.status = status;
+    }
+    
+    public TaskPriority getPriority() {
+        return priority;
+    }
+    
+    public void setPriority(TaskPriority priority) {
+        this.priority = priority;
     }
     
     public LocalDate getDueDate() {

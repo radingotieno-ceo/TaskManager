@@ -10,12 +10,12 @@ export class AuthGuard implements CanActivate {
   constructor(private router: Router, private authService: AuthService) { }
 
   canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean {
-    const currentUser = this.authService.currentUserValue;
+    const currentUser = this.authService.getCurrentUser();
     
     if (currentUser && this.authService.isAuthenticated()) {
       // Check if route has role requirements
       if (route.data['roles'] && route.data['roles'].length > 0) {
-        const userHasRole = this.authService.hasAnyRole(route.data['roles']);
+        const userHasRole = this.checkUserRole(currentUser, route.data['roles']);
         if (!userHasRole) {
           this.router.navigate(['/dashboard']);
           return false;
@@ -27,6 +27,10 @@ export class AuthGuard implements CanActivate {
     // Not logged in, redirect to login page
     this.router.navigate(['/login'], { queryParams: { returnUrl: state.url } });
     return false;
+  }
+
+  private checkUserRole(user: any, requiredRoles: string[]): boolean {
+    return requiredRoles.includes(user.role);
   }
 }
 

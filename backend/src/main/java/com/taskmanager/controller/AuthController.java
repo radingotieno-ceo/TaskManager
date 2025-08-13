@@ -193,6 +193,40 @@ public class AuthController {
         }
     }
 
+    @PostMapping("/test-cors")
+    public ResponseEntity<String> testCors() {
+        try {
+            log.info("CORS test endpoint called");
+            return ResponseEntity.ok("CORS is working! Current time: " + System.currentTimeMillis());
+        } catch (Exception e) {
+            log.error("CORS test endpoint error: {}", e.getMessage());
+            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/create-test-user")
+    public ResponseEntity<String> createTestUser() {
+        try {
+            log.info("Creating test user...");
+            
+            RegisterRequest testRequest = new RegisterRequest(
+                "Test User",
+                "test@karooth.com",
+                "password123",
+                "USER"
+            );
+            
+            UserDto user = userService.createUser(testRequest);
+            log.info("Test user created successfully: {}", user.getEmail());
+            
+            return ResponseEntity.ok("Test user created successfully: " + user.getEmail());
+        } catch (Exception e) {
+            log.error("Error creating test user: {}", e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body("Error creating test user: " + e.getMessage());
+        }
+    }
+
     @GetMapping("/debug/users")
     public ResponseEntity<String> debugUsers() {
         try {

@@ -14,6 +14,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
+import { MatMenuModule } from '@angular/material/menu';
 import { ReactiveFormsModule } from '@angular/forms';
 
 const routes: Routes = [
@@ -40,6 +41,7 @@ const routes: Routes = [
     MatProgressSpinnerModule,
     MatDatepickerModule,
     MatNativeDateModule,
+    MatMenuModule,
     ReactiveFormsModule
   ]
 })

@@ -4,10 +4,13 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
+import jakarta.annotation.PostConstruct;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -16,8 +19,18 @@ import java.util.function.Function;
 @Component
 public class JwtUtil {
     
-    private final Key secretKey = Keys.hmacShaKeyFor("your-256-bit-secret-your-256-bit-secret-your-256-bit-secret-your-256-bit-secret".getBytes());
-    private int jwtExpirationMs = 86400000; // 24 hours
+    @Value("${jwt.secret:your-256-bit-secret-your-256-bit-secret-your-256-bit-secret-your-256-bit-secret}")
+    private String secret;
+    
+    @Value("${jwt.expiration:86400}")
+    private Long expiration;
+    
+    private Key secretKey;
+    
+    @PostConstruct
+    public void init() {
+        this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+    }
     
     public String generateToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
@@ -29,7 +42,7 @@ public class JwtUtil {
                 .setClaims(claims)
                 .setSubject(subject)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
+                .setExpiration(new Date(System.currentTimeMillis() + expiration * 1000))
                 .signWith(secretKey, SignatureAlgorithm.HS256)
                 .compact();
     }

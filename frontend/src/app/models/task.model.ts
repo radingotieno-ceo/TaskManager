@@ -6,6 +6,7 @@ export interface Task {
   title: string;
   description?: string;
   status: 'TODO' | 'IN_PROGRESS' | 'DONE';
+  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
   dueDate: string;
   projectId: number;
   project?: Project;

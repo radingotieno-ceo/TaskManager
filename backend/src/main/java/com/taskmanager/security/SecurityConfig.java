@@ -23,70 +23,83 @@ import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity(prePostEnabled = true)
+@EnableMethodSecurity
 public class SecurityConfig {
-    
-    @Autowired
-    private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
-    
+
     @Autowired
     @Lazy
     private JwtRequestFilter jwtRequestFilter;
-    
+
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http
+            .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Enable CORS with our configuration
+            .csrf(csrf -> csrf.disable())
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authorizeHttpRequests(authz -> authz
+                // Public endpoints
+                .requestMatchers("/health", "/test-db", "/simple-test", "/test-password-encoding").permitAll()
+                .requestMatchers("/api/auth/**").permitAll()
+                
+                // Swagger UI and OpenAPI
+                .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/swagger-resources/**").permitAll()
+                
+                // H2 Console (for development)
+                .requestMatchers("/h2-console/**").permitAll()
+                
+                // Actuator endpoints
+                .requestMatchers("/actuator/**").permitAll()
+                
+                // CORS preflight requests - allow OPTIONS without authentication
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                
+                // Dashboard endpoints - require authentication
+                .requestMatchers("/api/dashboard/**").authenticated()
+                
+                // Admin endpoints - require ADMIN role
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                
+                // Task assignment endpoints - require ADMIN or MANAGER role
+                .requestMatchers("/api/tasks/assignment/**").hasAnyRole("ADMIN", "MANAGER")
+                
+                // Project and task endpoints - require authentication
+                .requestMatchers("/api/projects/**").authenticated()
+                .requestMatchers("/api/tasks/**").authenticated()
+                
+                // All other requests require authentication
+                .anyRequest().authenticated()
+            )
+            .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class)
+            .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable())); // For H2 console
+
+        return http.build();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOriginPatterns(Arrays.asList("http://localhost:4200"));
+        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"));
+        config.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept"));
+        config.setAllowCredentials(true);
+        config.setMaxAge(3600L);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
+    }
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-    
+
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
-        return config.getAuthenticationManager();
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
+        return authConfig.getAuthenticationManager();
     }
-    
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            .csrf(csrf -> csrf.disable())
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/health", "/test-db", "/simple-test", "/test-password-encoding").permitAll()
-                .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("/api/auth/debug/users").permitAll()
-                .requestMatchers("/api/auth/test-password").permitAll()
-                .requestMatchers("/api/auth/generate-hash").permitAll()
-                .requestMatchers("/api/auth/test-stored-hash").permitAll()
-                .requestMatchers("/api/auth/test").permitAll()
-                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html", "/swagger-resources/**", "/webjars/**").permitAll()
-                .requestMatchers("/h2-console/**").permitAll()
-                .requestMatchers("/actuator/**").permitAll()
-                .requestMatchers("/actuator/health").permitAll()
-                .requestMatchers("/actuator/info").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/projects").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/tasks").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/projects").hasAnyRole("ADMIN", "MANAGER")
-                .requestMatchers(HttpMethod.PUT, "/api/projects/**").hasAnyRole("ADMIN", "MANAGER")
-                .requestMatchers(HttpMethod.DELETE, "/api/projects/**").hasAnyRole("ADMIN", "MANAGER")
-                .requestMatchers(HttpMethod.POST, "/api/tasks").hasAnyRole("ADMIN", "MANAGER")
-                .requestMatchers(HttpMethod.PUT, "/api/tasks/*/assign").hasRole("MANAGER")
-                .anyRequest().authenticated()
-            )
-            .exceptionHandling(ex -> ex.authenticationEntryPoint(jwtAuthenticationEntryPoint))
-            .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
-            
-        return http.build();
-    }
-    
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(Arrays.asList("*"));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("*"));
-        configuration.setAllowCredentials(true);
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-        return source;
-    }
+
+
 }
 
 

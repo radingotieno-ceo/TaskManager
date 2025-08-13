@@ -1,0 +1,473 @@
+<!-- TaskFlow Manager Dashboard -->
+<div class="dashboard-container">
+  <!-- Left Sidebar Navigation -->
+  <nav class="sidebar" [class.collapsed]="sidebarCollapsed">
+    <div class="sidebar-header">
+      <div class="logo-container">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </div>
+        <span class="logo-text" *ngIf="!sidebarCollapsed">TaskFlow</span>
+      </div>
+    </div>
+    
+    <div class="sidebar-nav">
+      <a class="nav-item active" (click)="setActiveTab('dashboard')">
+        <mat-icon>dashboard</mat-icon>
+        <span *ngIf="!sidebarCollapsed">Dashboard</span>
+      </a>
+      <a class="nav-item" (click)="setActiveTab('projects')">
+        <mat-icon>folder</mat-icon>
+        <span *ngIf="!sidebarCollapsed">Projects</span>
+      </a>
+      <a class="nav-item" (click)="setActiveTab('tasks')">
+        <mat-icon>task</mat-icon>
+        <span *ngIf="!sidebarCollapsed">Tasks</span>
+      </a>
+      <a class="nav-item" (click)="setActiveTab('reports')">
+        <mat-icon>bar_chart</mat-icon>
+        <span *ngIf="!sidebarCollapsed">Reports</span>
+      </a>
+      <a class="nav-item" (click)="setActiveTab('settings')">
+        <mat-icon>settings</mat-icon>
+        <span *ngIf="!sidebarCollapsed">Settings</span>
+      </a>
+    </div>
+    
+    <div class="sidebar-footer">
+      <button class="collapse-btn" (click)="toggleSidebar()">
+        <mat-icon>{{ sidebarCollapsed ? 'chevron_right' : 'chevron_left' }}</mat-icon>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Main Content Area -->
+  <main class="main-content" [class.sidebar-collapsed]="sidebarCollapsed">
+    <!-- Top Header -->
+    <header class="header">
+      <div class="search-container">
+        <mat-icon class="search-icon">search</mat-icon>
+        <input 
+          type="text" 
+          class="search-input" 
+          placeholder="Search projects, tasks, or team members..."
+          [(ngModel)]="searchQuery"
+          (input)="onSearch()"
+        >
+      </div>
+      
+      <div class="header-actions">
+        <button class="notification-btn" (click)="showNotifications()">
+          <mat-icon>notifications</mat-icon>
+          <span class="notification-dot" *ngIf="hasNotifications"></span>
+        </button>
+        
+        <div class="user-profile">
+          <div class="avatar">
+            <mat-icon>person</mat-icon>
+          </div>
+          <div class="user-info" *ngIf="currentUser">
+            <div class="user-name">{{ currentUser.name }}</div>
+            <div class="user-role-tag manager">{{ currentUser.role }}</div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+      <button class="action-btn new-project-btn" (click)="newProject()">
+        <mat-icon>add</mat-icon>
+        <span>+ New Project</span>
+      </button>
+      <button class="action-btn assign-task-btn" (click)="assignTask()">
+        <mat-icon>assignment</mat-icon>
+        <span>+ Assign Task</span>
+      </button>
+      <button class="action-btn create-task-btn" (click)="showCreateTaskForm()">
+        <mat-icon>add_task</mat-icon>
+        <span>+ Create Task</span>
+      </button>
+    </div>
+
+    <!-- Dashboard Content -->
+    <div class="dashboard-content">
+      <!-- Loading State -->
+      <div class="loading-container" *ngIf="loading">
+        <mat-spinner diameter="50"></mat-spinner>
+        <p>Loading dashboard...</p>
+      </div>
+
+      <!-- Dashboard Content -->
+      <div class="content-area" *ngIf="!loading">
+        <!-- Summary Cards -->
+        <div class="summary-cards">
+          <div class="summary-card total-projects">
+            <div class="card-content">
+              <div class="card-icon">
+                <mat-icon>folder</mat-icon>
+              </div>
+              <div class="card-info">
+                <h3 class="card-title">Total Projects</h3>
+                <div class="card-value">{{ summaryCards.totalProjects || 0 }}</div>
+                <div class="card-trend positive">
+                  <mat-icon>trending_up</mat-icon>
+                  <span>Active projects</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="summary-card active-tasks">
+            <div class="card-content">
+              <div class="card-icon">
+                <mat-icon>task</mat-icon>
+              </div>
+              <div class="card-info">
+                <h3 class="card-title">Active Tasks</h3>
+                <div class="card-value">{{ summaryCards.activeTasks || 0 }}</div>
+                <div class="card-trend">
+                  <mat-icon>schedule</mat-icon>
+                  <span>Currently in progress</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="summary-card completed-tasks">
+            <div class="card-content">
+              <div class="card-icon">
+                <mat-icon>check_circle</mat-icon>
+              </div>
+              <div class="card-info">
+                <h3 class="card-title">Completed Tasks</h3>
+                <div class="card-value">{{ summaryCards.completedTasks || 0 }}</div>
+                <div class="card-trend positive">
+                  <mat-icon>trending_up</mat-icon>
+                  <span>Successfully finished</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="summary-card team-members">
+            <div class="card-content">
+              <div class="card-icon">
+                <mat-icon>group</mat-icon>
+              </div>
+              <div class="card-info">
+                <h3 class="card-title">Overdue Tasks</h3>
+                <div class="card-value">{{ summaryCards.overdueTasks || 0 }}</div>
+                <div class="card-trend">
+                  <span>Require attention</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dashboard Sections -->
+        <div class="dashboard-sections">
+          <!-- Recent Projects Section -->
+          <div class="section-card">
+            <div class="section-header">
+              <h2 class="section-title">Recent Projects</h2>
+              <p class="section-subtitle">Your most active projects and their progress.</p>
+            </div>
+            
+            <div class="project-list">
+              <div class="project-item" *ngFor="let project of recentProjects">
+                <div class="project-info">
+                  <h3 class="project-name">{{ project.name }}</h3>
+                  <p class="project-description">{{ project.description }}</p>
+                  <div class="project-meta">
+                    <div class="project-progress">
+                      <div class="progress-bar">
+                        <div class="progress-fill" [style.width.%]="project.progress"></div>
+                      </div>
+                      <span class="progress-text">{{ project.progress }}%</span>
+                    </div>
+                    <div class="project-details">
+                      <span class="due-date">Due: {{ project.dueDate }}</span>
+                                             <div class="team-members">
+                         <mat-icon>group</mat-icon>
+                         <span>{{ getProjectTeamSize(project) }}</span>
+                       </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent Tasks Section -->
+          <div class="section-card">
+            <div class="section-header">
+              <h2 class="section-title">Recent Tasks</h2>
+              <p class="section-subtitle">Latest task updates and assignments.</p>
+            </div>
+            
+            <div class="task-list">
+              <div class="task-item" *ngFor="let task of recentTasks">
+                                 <div class="task-info">
+                   <h3 class="task-name">{{ task.title }}</h3>
+                   <div class="task-meta">
+                     <span class="task-project">{{ task.project?.name }}</span>
+                     <span class="priority-badge" [class]="task.priority.toLowerCase()">{{ task.priority }}</span>
+                   </div>
+                   <div class="task-details">
+                     <div class="task-assignee">
+                       <div class="assignee-avatar">
+                         <mat-icon>person</mat-icon>
+                       </div>
+                       <span class="assignee-name">{{ task.assignedUser?.name || 'Unassigned' }}</span>
+                     </div>
+                     <div class="task-status">
+                       <span class="status-badge" [class]="task.status.toLowerCase()">{{ task.status }}</span>
+                       <span class="due-date">Due: {{ task.dueDate | date:'yyyy-MM-dd' }}</span>
+                     </div>
+                   </div>
+                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Task Assignment Modal -->
+<div class="modal-overlay" *ngIf="showTaskAssignmentModal" (click)="closeTaskAssignmentModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Assign Task</h2>
+      <button class="close-btn" (click)="closeTaskAssignmentModal()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+    
+    <div class="modal-body">
+      <div class="task-selection" *ngIf="!selectedTask">
+        <h3>Select Task to Assign</h3>
+        <div class="task-list">
+          <div class="task-item" *ngFor="let task of unassignedTasks" (click)="openTaskAssignmentModal(task)">
+            <div class="task-info">
+              <h4>{{ task.title }}</h4>
+              <p>{{ task.description }}</p>
+              <div class="task-meta">
+                                 <span class="priority-badge" [class]="task.priority.toLowerCase()">{{ task.priority }}</span>
+                <span class="project-name">{{ task.project?.name }}</span>
+                <span class="due-date">Due: {{ task.dueDate | date:'yyyy-MM-dd' }}</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Empty state -->
+          <div class="empty-state" *ngIf="unassignedTasks.length === 0">
+            <mat-icon class="empty-icon">task_alt</mat-icon>
+            <p class="empty-text">No unassigned tasks</p>
+            <p class="empty-subtext">All tasks are currently assigned</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="user-selection" *ngIf="selectedTask && !selectedUser">
+        <h3>Select User to Assign Task</h3>
+        <p><strong>Task:</strong> {{ selectedTask.title }}</p>
+        <div class="user-list">
+          <div class="user-item" *ngFor="let user of availableUsers" (click)="selectUserForAssignment(user)">
+            <div class="user-info">
+              <div class="user-avatar">
+                <mat-icon>person</mat-icon>
+              </div>
+              <div class="user-details">
+                <h4>{{ user.name }}</h4>
+                <p>{{ user.email }}</p>
+                <span class="user-role">{{ user.role }}</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Empty state -->
+          <div class="empty-state" *ngIf="availableUsers.length === 0">
+            <mat-icon class="empty-icon">group</mat-icon>
+            <p class="empty-text">No users available</p>
+            <p class="empty-subtext">No users are available for task assignment</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="confirmation" *ngIf="selectedTask && selectedUser">
+        <h3>Confirm Assignment</h3>
+        <div class="assignment-details">
+          <p><strong>Task:</strong> {{ selectedTask.title }}</p>
+          <p><strong>Assign to:</strong> {{ selectedUser.name }}</p>
+          <p><strong>User Role:</strong> {{ selectedUser.role }}</p>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-secondary" (click)="closeTaskAssignmentModal()">Cancel</button>
+          <button class="btn-primary" (click)="assignTaskToUser()">Confirm Assignment</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Create Project Modal -->
+<div class="modal-overlay" *ngIf="showCreateProjectModal" (click)="closeCreateProjectModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Create New Project</h2>
+      <button class="close-btn" (click)="closeCreateProjectModal()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+    
+    <div class="modal-body">
+      <form class="create-project-form" (ngSubmit)="createProject()">
+        <div class="form-group">
+          <label for="projectName">Project Name *</label>
+                     <input 
+             type="text" 
+             id="projectName" 
+             [(ngModel)]="newProjectForm.name" 
+             name="name"
+             placeholder="Enter project name"
+             required
+           >
+        </div>
+        
+        <div class="form-group">
+          <label for="projectDescription">Description</label>
+                     <textarea 
+             id="projectDescription" 
+             [(ngModel)]="newProjectForm.description" 
+             name="description"
+             placeholder="Enter project description"
+             rows="3"
+           ></textarea>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="projectPriority">Priority</label>
+                         <select 
+               id="projectPriority" 
+               [(ngModel)]="newProjectForm.priority" 
+               name="priority"
+             >
+              <option value="LOW">Low</option>
+              <option value="MEDIUM">Medium</option>
+              <option value="HIGH">High</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="projectDueDate">Due Date *</label>
+                         <input 
+               type="date" 
+               id="projectDueDate" 
+               [(ngModel)]="newProjectForm.dueDate" 
+               name="dueDate"
+               required
+             >
+          </div>
+        </div>
+        
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" (click)="closeCreateProjectModal()">Cancel</button>
+          <button type="submit" class="btn-primary">Create Project</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Create Task Modal -->
+<div class="modal-overlay" *ngIf="showCreateTaskModal" (click)="closeCreateTaskModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Create New Task</h2>
+      <button class="close-btn" (click)="closeCreateTaskModal()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+    
+    <div class="modal-body">
+      <form class="create-task-form" (ngSubmit)="createTask()">
+        <div class="form-group">
+          <label for="taskTitle">Task Title *</label>
+          <input 
+            type="text" 
+            id="taskTitle" 
+            [(ngModel)]="newTask.title" 
+            name="title"
+            placeholder="Enter task title"
+            required
+          >
+        </div>
+        
+        <div class="form-group">
+          <label for="taskDescription">Description</label>
+          <textarea 
+            id="taskDescription" 
+            [(ngModel)]="newTask.description" 
+            name="description"
+            placeholder="Enter task description"
+            rows="3"
+          ></textarea>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="taskPriority">Priority</label>
+            <select 
+              id="taskPriority" 
+              [(ngModel)]="newTask.priority" 
+              name="priority"
+            >
+              <option value="LOW">Low</option>
+              <option value="MEDIUM">Medium</option>
+              <option value="HIGH">High</option>
+              <option value="CRITICAL">Critical</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="taskDueDate">Due Date *</label>
+            <input 
+              type="date" 
+              id="taskDueDate" 
+              [(ngModel)]="newTask.dueDate" 
+              name="dueDate"
+              required
+            >
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="taskProject">Project *</label>
+          <select 
+            id="taskProject" 
+            [(ngModel)]="newTask.projectId" 
+            name="projectId"
+            required
+          >
+            <option value="">Select a project</option>
+            <option *ngFor="let project of availableProjects" [value]="project.id">
+              {{ project.name }}
+            </option>
+          </select>
+        </div>
+        
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" (click)="closeCreateTaskModal()">Cancel</button>
+          <button type="submit" class="btn-primary">Create Task</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

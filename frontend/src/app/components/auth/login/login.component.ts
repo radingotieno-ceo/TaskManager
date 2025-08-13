@@ -184,7 +184,7 @@ export class LoginComponent implements OnInit {
         this.loading = false;
         console.log('Login successful:', response); // Debug log
         this.showMessage('Login successful!', 'success');
-        this.router.navigate(['/dashboard']);
+        // Navigation is now handled by AuthService
       },
       error: (error) => {
         this.loading = false;
@@ -213,10 +213,7 @@ export class LoginComponent implements OnInit {
       next: (response) => {
         this.loading = false;
         this.showMessage('Registration successful!', 'success');
-        // Auto-login after registration
-        this.loginData.email = this.registerData.email;
-        this.loginData.password = this.registerData.password;
-        this.onLogin();
+        // Navigation is now handled by AuthService
       },
       error: (error) => {
         this.loading = false;

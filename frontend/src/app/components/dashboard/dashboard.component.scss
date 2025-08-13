@@ -1,4 +1,4 @@
-/* TaskFlow Dashboard - Clean Modern Design */
+/* TaskFlow Admin Dashboard - Clean Modern Design */
 
 // Variables
 $primary-color: #3b82f6;
@@ -299,11 +299,60 @@ $shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.
 .user-role-tag {
   font-size: 12px;
   font-weight: 500;
-  color: $primary-color;
-  background: $primary-light;
   padding: 2px 8px;
   border-radius: 12px;
   text-align: center;
+
+  &.admin {
+    color: $error-color;
+    background: rgba(239, 68, 68, 0.1);
+  }
+}
+
+// Action Buttons
+.action-buttons {
+  background: $bg-primary;
+  border-bottom: 1px solid $border-color;
+  padding: 16px 32px;
+  display: flex;
+  gap: 16px;
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  @include smooth-transition(all);
+
+  &.add-user-btn {
+    background: $primary-color;
+    color: white;
+
+    &:hover {
+      background: $primary-dark;
+    }
+  }
+
+  &.new-project-btn {
+    background: $success-color;
+    color: white;
+
+    &:hover {
+      background: darken($success-color, 10%);
+    }
+  }
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
 }
 
 // Dashboard Content
@@ -327,6 +376,26 @@ $shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.
   gap: 32px;
 }
 
+// System Overview Section
+.system-overview-section {
+  .section-header {
+    margin-bottom: 24px;
+  }
+
+  .main-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: $text-primary;
+    margin: 0 0 8px 0;
+  }
+
+  .main-subtitle {
+    font-size: 16px;
+    color: $text-secondary;
+    margin: 0;
+  }
+}
+
 // Summary Cards
 .summary-cards {
   display: grid;
@@ -337,11 +406,38 @@ $shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.
 .summary-card {
   @include card-style;
   padding: 24px;
+  position: relative;
   @include smooth-transition(all);
 
   &:hover {
     box-shadow: $shadow-md;
     transform: translateY(-2px);
+  }
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    border-radius: 2px;
+  }
+
+  &.total-users::before {
+    background: $primary-color;
+  }
+
+  &.active-projects::before {
+    background: #8b5cf6;
+  }
+
+  &.tasks-completed::before {
+    background: $success-color;
+  }
+
+  &.system-health::before {
+    background: $warning-color;
   }
 }
 
@@ -359,26 +455,8 @@ $shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-
-  &.total {
-    background: rgba(59, 130, 246, 0.1);
-    color: $primary-color;
-  }
-
-  &.active {
-    background: rgba(245, 158, 11, 0.1);
-    color: $warning-color;
-  }
-
-  &.completed {
-    background: rgba(16, 185, 129, 0.1);
-    color: $success-color;
-  }
-
-  &.team {
-    background: rgba(139, 92, 246, 0.1);
-    color: #8b5cf6;
-  }
+  background: $bg-light;
+  color: $text-secondary;
 
   mat-icon {
     font-size: 24px;
@@ -425,24 +503,25 @@ $shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.
   }
 }
 
-// Dashboard Sections
-.dashboard-sections {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 32px;
-}
-
-.section-card {
+// Project Portfolio Section
+.project-portfolio-section {
   @include card-style;
   padding: 24px;
 }
 
 .section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   margin-bottom: 24px;
 }
 
+.header-content {
+  flex: 1;
+}
+
 .section-title {
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 600;
   color: $text-primary;
   margin: 0 0 4px 0;
@@ -454,44 +533,121 @@ $shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.
   margin: 0;
 }
 
+.view-analytics-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: $primary-color;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  @include smooth-transition(all);
+
+  &:hover {
+    background: $primary-dark;
+  }
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+}
+
 // Project List
 .project-list {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
 }
 
 .project-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
   padding: 20px;
   background: $bg-secondary;
   border-radius: 8px;
   border: 1px solid $border-color;
 }
 
+.project-info {
+  flex: 1;
+}
+
+.project-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
 .project-name {
   font-size: 16px;
   font-weight: 600;
   color: $text-primary;
-  margin: 0 0 8px 0;
+  margin: 0;
 }
 
-.project-description {
-  font-size: 14px;
-  color: $text-secondary;
-  margin: 0 0 16px 0;
-  line-height: 1.5;
+.priority-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 12px;
+  text-transform: uppercase;
+
+  &.high {
+    background: rgba(59, 130, 246, 0.1);
+    color: $primary-color;
+  }
+
+  &.critical {
+    background: rgba(239, 68, 68, 0.1);
+    color: $error-color;
+  }
 }
 
 .project-meta {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
+  gap: 24px;
+  margin-bottom: 12px;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: $text-secondary;
+
+  mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+  }
+}
+
+.project-status {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.status-text {
+  font-size: 13px;
+  color: $text-secondary;
+  font-weight: 500;
 }
 
 .project-progress {
   display: flex;
   align-items: center;
   gap: 12px;
+  flex: 1;
 }
 
 .progress-bar {
@@ -516,160 +672,215 @@ $shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.
   min-width: 40px;
 }
 
-.project-details {
+.more-options-btn {
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  font-size: 13px;
-  color: $text-secondary;
-}
+  justify-content: center;
+  cursor: pointer;
+  @include smooth-transition(all);
 
-.due-date {
-  font-weight: 500;
-}
-
-.team-members {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+  &:hover {
+    background: $bg-light;
+  }
 
   mat-icon {
-    font-size: 16px;
-    width: 16px;
-    height: 16px;
+    color: $text-secondary;
+    font-size: 18px;
   }
 }
 
-// Task List
-.task-list {
+// Team Overview Section
+.team-overview-section {
+  @include card-style;
+  padding: 24px;
+}
+
+.settings-btn {
+  width: 40px;
+  height: 40px;
+  background: $bg-secondary;
+  border: 1px solid $border-color;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  @include smooth-transition(all);
+
+  &:hover {
+    background: $bg-light;
+  }
+
+  mat-icon {
+    color: $text-secondary;
+  }
+}
+
+.team-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.stat-item {
+  text-align: center;
+  padding: 20px;
+  background: $bg-secondary;
+  border-radius: 8px;
+}
+
+.stat-value {
+  font-size: 32px;
+  font-weight: 700;
+  color: $text-primary;
+  margin-bottom: 8px;
+}
+
+.stat-label {
+  font-size: 14px;
+  color: $text-secondary;
+  font-weight: 500;
+}
+
+.recent-activity {
+  .activity-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: $text-primary;
+    margin: 0 0 16px 0;
+  }
+}
+
+.activity-list {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
-.task-item {
-  padding: 16px;
-  background: $bg-secondary;
-  border-radius: 8px;
-  border: 1px solid $border-color;
-}
-
-.task-name {
-  font-size: 14px;
-  font-weight: 600;
-  color: $text-primary;
-  margin: 0 0 8px 0;
-}
-
-.task-meta {
+.activity-item {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 12px;
+  padding: 16px;
+  background: $bg-secondary;
+  border-radius: 8px;
 }
 
-.task-project {
-  font-size: 13px;
-  color: $text-secondary;
-}
-
-.priority-badge {
-  font-size: 11px;
-  font-weight: 600;
-  padding: 2px 8px;
-  border-radius: 12px;
-  text-transform: uppercase;
-
-  &.high {
-    background: rgba(239, 68, 68, 0.1);
-    color: $error-color;
-  }
-
-  &.medium {
-    background: rgba(245, 158, 11, 0.1);
-    color: $warning-color;
-  }
-
-  &.low {
-    background: rgba(16, 185, 129, 0.1);
-    color: $success-color;
-  }
-}
-
-.task-details {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.task-assignee {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.assignee-avatar {
-  width: 24px;
-  height: 24px;
+.activity-avatar {
+  width: 40px;
+  height: 40px;
   background: $primary-light;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   color: $primary-color;
-
-  mat-icon {
-    font-size: 14px;
-    width: 14px;
-    height: 14px;
-  }
+  font-weight: 600;
+  font-size: 14px;
 }
 
-.assignee-name {
+.activity-content {
+  flex: 1;
+}
+
+.activity-user {
+  font-size: 14px;
+  font-weight: 600;
+  color: $text-primary;
+  margin-bottom: 4px;
+}
+
+.activity-action {
   font-size: 13px;
   color: $text-secondary;
+  margin-bottom: 4px;
 }
 
-.task-status {
+.activity-meta {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-.status-badge {
+.activity-role {
   font-size: 11px;
   font-weight: 600;
-  padding: 2px 8px;
-  border-radius: 12px;
-  text-transform: uppercase;
+  color: $error-color;
+  background: rgba(239, 68, 68, 0.1);
+  padding: 2px 6px;
+  border-radius: 8px;
+}
 
-  &.todo {
-    background: rgba(100, 116, 139, 0.1);
-    color: $secondary-color;
-  }
+.activity-time {
+  font-size: 12px;
+  color: $text-light;
+}
 
-  &.in-progress {
-    background: rgba(59, 130, 246, 0.1);
-    color: $primary-color;
-  }
+// System Alerts Section
+.system-alerts-section {
+  @include card-style;
+  padding: 20px;
+}
 
-  &.completed {
-    background: rgba(16, 185, 129, 0.1);
-    color: $success-color;
+.alert-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.alert-icon {
+  width: 40px;
+  height: 40px;
+  background: rgba(245, 158, 11, 0.1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $warning-color;
+
+  mat-icon {
+    font-size: 20px;
   }
+}
+
+.alert-content {
+  flex: 1;
+}
+
+.alert-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: $text-primary;
+  margin: 0 0 4px 0;
+}
+
+.alert-description {
+  font-size: 14px;
+  color: $text-secondary;
+  margin: 0;
 }
 
 // Responsive Design
 @media (max-width: 1200px) {
-  .dashboard-sections {
-    grid-template-columns: 1fr;
+  .summary-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .team-stats {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
 @media (max-width: 768px) {
   .sidebar {
     transform: translateX(-100%);
-    
+
     &.collapsed {
       transform: translateX(0);
     }
@@ -677,14 +888,10 @@ $shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.
 
   .main-content {
     margin-left: 0;
-    
+
     &.sidebar-collapsed {
       margin-left: 80px;
     }
-  }
-
-  .summary-cards {
-    grid-template-columns: 1fr;
   }
 
   .header {
@@ -697,8 +904,21 @@ $shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.
     max-width: none;
   }
 
+  .action-buttons {
+    padding: 16px 20px;
+    flex-direction: column;
+  }
+
   .dashboard-content {
     padding: 20px;
+  }
+
+  .summary-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .team-stats {
+    grid-template-columns: 1fr;
   }
 }
 

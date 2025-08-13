@@ -17,40 +17,56 @@ export class DashboardComponent implements OnInit, OnDestroy {
   hasNotifications = true;
   activeTab = 'dashboard';
 
-  // Sample data matching TaskFlow design
-  recentProjects = [
+  // Admin dashboard data - Project Portfolio
+  adminProjects = [
     {
-      name: 'Mobile App Redesign',
-      description: 'Complete UI/UX overhaul for mobile application.',
-      progress: 75,
-      dueDate: '2024-01-15',
-      teamSize: 5
+      name: 'Enterprise CRM Redesign',
+      priority: 'HIGH',
+      members: 12,
+      dueDate: 'Dec 15, 2024',
+      status: 'In Progress',
+      progress: 78
     },
     {
-      name: 'API Integration',
-      description: 'Integrate third-party payment gateway.',
-      progress: 45,
-      dueDate: '2024-01-20',
-      teamSize: 3
+      name: 'Data Migration Project',
+      priority: 'CRITICAL',
+      members: 6,
+      dueDate: 'Nov 28, 2024',
+      status: 'In Progress',
+      progress: 95
+    },
+    {
+      name: 'Security Audit Implementation',
+      priority: 'HIGH',
+      members: 4,
+      dueDate: 'Dec 20, 2024',
+      status: 'In Progress',
+      progress: 45
     }
   ];
 
-  recentTasks = [
+  // Admin dashboard data - Recent Activities
+  recentActivities = [
     {
-      name: 'Design user authentication flow',
-      project: 'Mobile App Redesign',
-      priority: 'HIGH',
-      assignee: 'Alex Johnson',
-      status: 'TODO',
-      dueDate: '2024-01-12'
+      avatar: 'SJ',
+      user: 'Sarah Johnson',
+      action: 'Completed 5 tasks',
+      role: 'ADMIN',
+      time: '4 hours ago'
     },
     {
-      name: 'Implement payment validation',
-      project: 'API Integration',
-      priority: 'MEDIUM',
-      assignee: 'Maria Garcia',
-      status: 'IN_PROGRESS',
-      dueDate: '2024-01-14'
+      avatar: 'DR',
+      user: 'David Rodriguez',
+      action: 'Updated user permissions',
+      role: 'ADMIN',
+      time: '6 hours ago'
+    },
+    {
+      avatar: 'LT',
+      user: 'Lisa Thompson',
+      action: 'Generated monthly report',
+      role: 'MANAGER',
+      time: '1 day ago'
     }
   ];
 
@@ -95,6 +111,32 @@ export class DashboardComponent implements OnInit, OnDestroy {
     console.log('Showing notifications');
   }
 
+  addUser(): void {
+    // Implement add user functionality
+    console.log('Adding new user');
+  }
+
+  newProject(): void {
+    // Implement new project functionality
+    console.log('Creating new project');
+  }
+
+  viewAnalytics(): void {
+    // Navigate to analytics page
+    console.log('Viewing analytics');
+  }
+
+  showProjectOptions(project: any): void {
+    // Show project options menu
+    console.log('Showing options for project:', project.name);
+  }
+
+  manageTeamSettings(): void {
+    // Navigate to team settings
+    console.log('Managing team settings');
+  }
+
+  // Role-based access methods
   canManageProjects(): boolean {
     return this.currentUser?.role === 'ADMIN' || this.currentUser?.role === 'MANAGER';
   }

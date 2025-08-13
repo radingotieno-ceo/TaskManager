@@ -1,28 +1,21 @@
--- Sample data initialization for Task Management System
--- This script runs automatically when Spring Boot starts up
+-- =====================================================
+-- KAROOTH TASK MANAGEMENT SYSTEM - DATA INITIALIZATION
+-- =====================================================
+-- Sample users for testing authentication and authorization
 
--- Debug: Check if script is running
-INSERT INTO users (name, email, password, role, created_at) VALUES
-('Debug Test', 'debug@test.com', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'USER', NOW());
+-- Insert sample users (password: password123)
+INSERT INTO users (name, email, password, role) VALUES
+('Test Manager', 'test@karooth.com', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'MANAGER'),
+('Test User', 'user@karooth.com', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'USER'),
+('Admin User', 'admin@karooth.com', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'ADMIN');
 
--- Insert sample users with BCrypt encoded passwords
--- Password for all users is 'password123' (encoded with BCrypt)
--- Updated with correct hash: $2a$10$0ZytMgDUKb1GL00g8YEe/OW4FRhwQugv9PmxP0KZJYFFwdZR9FLu6
-INSERT INTO users (name, email, password, role, created_at) VALUES
-('John Admin', 'admin@karooth.com', '$2a$10$0ZytMgDUKb1GL00g8YEe/OW4FRhwQugv9PmxP0KZJYFFwdZR9FLu6', 'ADMIN', NOW()),
-('Sarah Manager', 'manager@karooth.com', '$2a$10$0ZytMgDUKb1GL00g8YEe/OW4FRhwQugv9PmxP0KZJYFFwdZR9FLu6', 'MANAGER', NOW()),
-('Test User', 'test@karooth.com', '$2a$10$0ZytMgDUKb1GL00g8YEe/OW4FRhwQugv9PmxP0KZJYFFwdZR9FLu6', 'USER', NOW()),
-('Mike Developer', 'mike@karooth.com', '$2a$10$0ZytMgDUKb1GL00g8YEe/OW4FRhwQugv9PmxP0KZJYFFwdZR9FLu6', 'USER', NOW()),
-('Lisa Designer', 'lisa@karooth.com', '$2a$10$0ZytMgDUKb1GL00g8YEe/OW4FRhwQugv9PmxP0KZJYFFwdZR9FLu6', 'USER', NOW()),
-('David Tester', 'david@karooth.com', '$2a$10$0ZytMgDUKb1GL00g8YEe/OW4FRhwQugv9PmxP0KZJYFFwdZR9FLu6', 'USER', NOW()),
-('Emma Analyst', 'emma@karooth.com', '$2a$10$0ZytMgDUKb1GL00g8YEe/OW4FRhwQugv9PmxP0KZJYFFwdZR9FLu6', 'USER', NOW());
+-- Sample projects for testing task creation functionality
+INSERT INTO projects (name, description, priority, due_date, status) VALUES
+('Website Redesign', 'Complete redesign of the company website with modern UI/UX', 'HIGH', DATEADD('MONTH', 2, CURRENT_DATE()), 'IN_PROGRESS'),
+('Mobile App Development', 'Develop a new mobile application for iOS and Android', 'CRITICAL', DATEADD('MONTH', 3, CURRENT_DATE()), 'IN_PROGRESS'),
+('Database Migration', 'Migrate legacy database to new cloud infrastructure', 'MEDIUM', DATEADD('MONTH', 1, CURRENT_DATE()), 'TODO'),
+('Security Audit', 'Conduct comprehensive security audit of all systems', 'HIGH', DATEADD('MONTH', 1, CURRENT_DATE()), 'TODO'),
+('Marketing Campaign', 'Launch new marketing campaign for Q4 product release', 'MEDIUM', DATEADD('MONTH', 2, CURRENT_DATE()), 'IN_PROGRESS');
 
--- Insert sample projects
-INSERT INTO projects (name, description, created_at) VALUES
-('E-Commerce Platform', 'Modern e-commerce solution with payment integration', NOW()),
-('Mobile App Development', 'Cross-platform mobile application for task management', NOW()),
-('Website Redesign', 'Complete redesign of corporate website', NOW()),
-('API Development', 'RESTful API for third-party integrations', NOW()),
-('Database Migration', 'Legacy system migration to cloud infrastructure', NOW());
-
--- No sample tasks - we'll create them through the application to test task assignment functionality
+-- Add a dummy statement to make the file valid SQL
+SELECT 1;

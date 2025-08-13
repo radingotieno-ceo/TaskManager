@@ -1,0 +1,41 @@
+// Global SCSS Variables
+$primary-color: #1976d2;
+$secondary-color: #424242;
+$accent-color: #ff4081;
+$warn-color: #f44336;
+$success-color: #4caf50;
+
+$text-primary: #212121;
+$text-secondary: #757575;
+$text-disabled: #bdbdbd;
+
+$background-primary: #ffffff;
+$background-secondary: #f5f5f5;
+$background-card: #ffffff;
+
+$border-color: #e0e0e0;
+$border-radius: 4px;
+
+$spacing-xs: 4px;
+$spacing-sm: 8px;
+$spacing-md: 16px;
+$spacing-lg: 24px;
+$spacing-xl: 32px;
+
+$font-size-xs: 12px;
+$font-size-sm: 14px;
+$font-size-md: 16px;
+$font-size-lg: 18px;
+$font-size-xl: 24px;
+
+$shadow-1: 0 2px 4px rgba(0,0,0,0.1);
+$shadow-2: 0 4px 8px rgba(0,0,0,0.1);
+$shadow-3: 0 8px 16px rgba(0,0,0,0.1);
+
+// Breakpoints
+$breakpoint-xs: 0px;
+$breakpoint-sm: 600px;
+$breakpoint-md: 960px;
+$breakpoint-lg: 1280px;
+$breakpoint-xl: 1920px;
+

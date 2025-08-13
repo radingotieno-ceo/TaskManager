@@ -12,9 +12,6 @@ import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
-import com.taskmanager.entity.Role;
-import com.taskmanager.entity.Task;
 
 @Entity
 @Table(name = "users")

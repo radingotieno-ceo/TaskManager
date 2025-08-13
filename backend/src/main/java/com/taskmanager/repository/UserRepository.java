@@ -4,6 +4,7 @@ import com.taskmanager.entity.User;
 import com.taskmanager.entity.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
@@ -52,4 +53,25 @@ public interface UserRepository extends JpaRepository<User, Long> {
     // Get top performers (users with most completed tasks)
     @Query("SELECT u, COUNT(t) as completedCount FROM User u LEFT JOIN u.assignedTasks t WHERE t.status = 'DONE' GROUP BY u ORDER BY completedCount DESC")
     List<Object[]> findTopPerformers();
+    
+    // Update user role
+    @Modifying
+    @Query("UPDATE User u SET u.role = :newRole WHERE u.id = :userId")
+    void updateUserRole(@Param("userId") Long userId, @Param("newRole") Role newRole);
+    
+    // Find users available for task assignment (excluding admins)
+    @Query("SELECT u FROM User u WHERE u.role != 'ADMIN' ORDER BY u.name")
+    List<User> findUsersAvailableForTaskAssignment();
+    
+    // Find managers available for managerial duties
+    @Query("SELECT u FROM User u WHERE u.role = 'MANAGER' ORDER BY u.name")
+    List<User> findManagers();
+    
+    // Find users by role excluding current user
+    @Query("SELECT u FROM User u WHERE u.role = :role AND u.id != :excludeUserId ORDER BY u.name")
+    List<User> findByRoleExcludingUser(@Param("role") Role role, @Param("excludeUserId") Long excludeUserId);
+    
+    // Get user statistics
+    @Query("SELECT u.role, COUNT(u) FROM User u GROUP BY u.role")
+    List<Object[]> getUserStatisticsByRole();
 }
