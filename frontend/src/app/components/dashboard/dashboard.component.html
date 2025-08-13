@@ -1,0 +1,226 @@
+<!-- TaskFlow Dashboard -->
+<div class="dashboard-container">
+  <!-- Left Sidebar Navigation -->
+  <nav class="sidebar" [class.collapsed]="sidebarCollapsed">
+    <div class="sidebar-header">
+      <div class="logo-container">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </div>
+        <span class="logo-text" *ngIf="!sidebarCollapsed">TaskFlow</span>
+      </div>
+    </div>
+    
+    <div class="sidebar-nav">
+      <a class="nav-item active" (click)="setActiveTab('dashboard')">
+        <mat-icon>dashboard</mat-icon>
+        <span *ngIf="!sidebarCollapsed">Dashboard</span>
+      </a>
+      <a class="nav-item" (click)="setActiveTab('projects')">
+        <mat-icon>folder</mat-icon>
+        <span *ngIf="!sidebarCollapsed">Projects</span>
+      </a>
+      <a class="nav-item" (click)="setActiveTab('tasks')">
+        <mat-icon>task</mat-icon>
+        <span *ngIf="!sidebarCollapsed">Tasks</span>
+      </a>
+      <a class="nav-item" (click)="setActiveTab('reports')">
+        <mat-icon>bar_chart</mat-icon>
+        <span *ngIf="!sidebarCollapsed">Reports</span>
+      </a>
+      <a class="nav-item" (click)="setActiveTab('settings')">
+        <mat-icon>settings</mat-icon>
+        <span *ngIf="!sidebarCollapsed">Settings</span>
+      </a>
+    </div>
+    
+    <div class="sidebar-footer">
+      <button class="collapse-btn" (click)="toggleSidebar()">
+        <mat-icon>{{ sidebarCollapsed ? 'chevron_right' : 'chevron_left' }}</mat-icon>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Main Content Area -->
+  <main class="main-content" [class.sidebar-collapsed]="sidebarCollapsed">
+    <!-- Top Header -->
+    <header class="header">
+      <div class="search-container">
+        <mat-icon class="search-icon">search</mat-icon>
+        <input 
+          type="text" 
+          class="search-input" 
+          placeholder="Search projects, tasks, or team members..."
+          [(ngModel)]="searchQuery"
+          (input)="onSearch()"
+        >
+      </div>
+      
+      <div class="header-actions">
+        <button class="notification-btn" (click)="showNotifications()">
+          <mat-icon>notifications</mat-icon>
+          <span class="notification-dot" *ngIf="hasNotifications"></span>
+        </button>
+        
+        <div class="user-profile">
+          <div class="avatar">
+            <mat-icon>person</mat-icon>
+          </div>
+          <div class="user-info" *ngIf="currentUser">
+            <div class="user-name">{{ currentUser.name }}</div>
+            <div class="user-role-tag">{{ currentUser.role }}</div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Dashboard Content -->
+    <div class="dashboard-content">
+      <!-- Loading State -->
+      <div class="loading-container" *ngIf="loading">
+        <mat-spinner diameter="50"></mat-spinner>
+        <p>Loading dashboard...</p>
+      </div>
+
+      <!-- Dashboard Content -->
+      <div class="content-area" *ngIf="!loading">
+        <!-- Summary Cards -->
+        <div class="summary-cards">
+          <div class="summary-card">
+            <div class="card-content">
+              <div class="card-icon total">
+                <mat-icon>folder</mat-icon>
+              </div>
+              <div class="card-info">
+                <h3 class="card-title">Total Projects</h3>
+                <div class="card-value">12</div>
+                <div class="card-trend positive">
+                  <mat-icon>trending_up</mat-icon>
+                  <span>+2 from last month</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="summary-card">
+            <div class="card-content">
+              <div class="card-icon active">
+                <mat-icon>task</mat-icon>
+              </div>
+              <div class="card-info">
+                <h3 class="card-title">Active Tasks</h3>
+                <div class="card-value">34</div>
+                <div class="card-trend">
+                  <mat-icon>schedule</mat-icon>
+                  <span>5 due this week</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="summary-card">
+            <div class="card-content">
+              <div class="card-icon completed">
+                <mat-icon>check_circle</mat-icon>
+              </div>
+              <div class="card-info">
+                <h3 class="card-title">Completed Tasks</h3>
+                <div class="card-value">128</div>
+                <div class="card-trend positive">
+                  <mat-icon>trending_up</mat-icon>
+                  <span>+12 this week</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="summary-card">
+            <div class="card-content">
+              <div class="card-icon team">
+                <mat-icon>group</mat-icon>
+              </div>
+              <div class="card-info">
+                <h3 class="card-title">Team Members</h3>
+                <div class="card-value">8</div>
+                <div class="card-trend">
+                  <span>Across all projects</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dashboard Sections -->
+        <div class="dashboard-sections">
+          <!-- Recent Projects Section -->
+          <div class="section-card">
+            <div class="section-header">
+              <h2 class="section-title">Recent Projects</h2>
+              <p class="section-subtitle">Your most active projects and their progress.</p>
+            </div>
+            
+            <div class="project-list">
+              <div class="project-item" *ngFor="let project of recentProjects">
+                <div class="project-info">
+                  <h3 class="project-name">{{ project.name }}</h3>
+                  <p class="project-description">{{ project.description }}</p>
+                  <div class="project-meta">
+                    <div class="project-progress">
+                      <div class="progress-bar">
+                        <div class="progress-fill" [style.width.%]="project.progress"></div>
+                      </div>
+                      <span class="progress-text">{{ project.progress }}%</span>
+                    </div>
+                    <div class="project-details">
+                      <span class="due-date">Due: {{ project.dueDate }}</span>
+                      <div class="team-members">
+                        <mat-icon>group</mat-icon>
+                        <span>{{ project.teamSize }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent Tasks Section -->
+          <div class="section-card">
+            <div class="section-header">
+              <h2 class="section-title">Recent Tasks</h2>
+              <p class="section-subtitle">Latest task updates and assignments.</p>
+            </div>
+            
+            <div class="task-list">
+              <div class="task-item" *ngFor="let task of recentTasks">
+                <div class="task-info">
+                  <h3 class="task-name">{{ task.name }}</h3>
+                  <div class="task-meta">
+                    <span class="task-project">{{ task.project }}</span>
+                    <span class="priority-badge" [class]="task.priority.toLowerCase()">{{ task.priority }}</span>
+                  </div>
+                  <div class="task-details">
+                    <div class="task-assignee">
+                      <div class="assignee-avatar">
+                        <mat-icon>person</mat-icon>
+                      </div>
+                      <span class="assignee-name">{{ task.assignee }}</span>
+                    </div>
+                    <div class="task-status">
+                      <span class="status-badge" [class]="task.status.toLowerCase()">{{ task.status }}</span>
+                      <span class="due-date">Due: {{ task.dueDate }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+

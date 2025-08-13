@@ -1,0 +1,65 @@
+<div class="main">
+  <div class="container a-container" id="a-container" style="display: none;">
+    <form class="form" id="a-form" (ngSubmit)="onSubmit()" #registerForm="ngForm">
+      <h2 class="form_title title">Create Account</h2>
+      <div class="form__icons">
+        <div class="logo-container">
+          <h1 class="logo">KAROOTH</h1>
+          <p class="logo-subtitle">TASK MANAGER</p>
+        </div>
+      </div>
+      <span class="form__span">Join our task management platform</span>
+      <input class="form__input" type="text" placeholder="Full Name" [(ngModel)]="registerData.name" name="name" required>
+      <input class="form__input" type="email" placeholder="Email Address" [(ngModel)]="registerData.email" name="email" required>
+      <input class="form__input" type="password" placeholder="Password" [(ngModel)]="registerData.password" name="password" required>
+      <select class="form__input form__select" [(ngModel)]="registerData.role" name="role" required>
+        <option value="USER">User</option>
+        <option value="MANAGER">Manager</option>
+        <option value="ADMIN">Admin</option>
+      </select>
+      <button class="form__button button submit" type="submit" [disabled]="loading">
+        <span *ngIf="!loading">SIGN UP</span>
+        <span *ngIf="loading" class="loading">Processing...</span>
+      </button>
+      <div class="form-switch">
+        <p>Already have an account? <a (click)="switchToLogin()" class="switch-link">Sign In</a></p>
+      </div>
+    </form>
+  </div>
+  
+  <div class="container b-container" id="b-container" style="display: flex;">
+    <form class="form" id="b-form" (ngSubmit)="onLogin()" #loginForm="ngForm">
+      <h2 class="form_title title">Sign in to KAROOTH</h2>
+      <div class="form__icons">
+        <div class="logo-container">
+          <h1 class="logo">KAROOTH</h1>
+          <p class="logo-subtitle">TASK MANAGER</p>
+        </div>
+      </div>
+      <span class="form__span">Welcome back to your workspace</span>
+      <input class="form__input" type="email" placeholder="Email Address" [(ngModel)]="loginData.email" name="loginEmail" required>
+      <input class="form__input" type="password" placeholder="Password" [(ngModel)]="loginData.password" name="loginPassword" required>
+      <a class="form__link" (click)="forgotPassword()">Forgot your password?</a>
+      
+      <!-- Debug button -->
+      <button type="button" (click)="testLoginData()" style="margin: 10px; padding: 5px; background: #ff6b6b; color: white; border: none; border-radius: 3px;">
+        Set Test Data
+      </button>
+      
+      <!-- Test backend connection button -->
+      <button type="button" (click)="testBackendConnection()" style="margin: 10px; padding: 5px; background: #4ecdc4; color: white; border: none; border-radius: 3px;">
+        Test Backend
+      </button>
+      
+      <button class="form__button button submit" type="button" (click)="onLogin()" [disabled]="loading">
+        <span *ngIf="!loading">SIGN IN</span>
+        <span *ngIf="loading" class="loading">Processing...</span>
+      </button>
+      <div class="form-switch">
+        <p>Don't have an account? <a (click)="switchToRegister()" class="switch-link">Sign Up</a></p>
+      </div>
+    </form>
+  </div>
+</div>
+
+

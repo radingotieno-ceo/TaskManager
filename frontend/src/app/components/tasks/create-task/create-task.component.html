@@ -1,0 +1,77 @@
+<div class="create-task-container">
+  <div class="create-task-header">
+    <h1>Create New Task</h1>
+    <p>Fill in the details below to create a new task</p>
+  </div>
+
+  <mat-card class="create-task-form">
+    <mat-card-content>
+      <form [formGroup]="taskForm" (ngSubmit)="onSubmit()">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Task Title</mat-label>
+          <input matInput formControlName="title" placeholder="Enter task title">
+          <mat-error *ngIf="taskForm.get('title')?.hasError('required')">
+            Task title is required
+          </mat-error>
+          <mat-error *ngIf="taskForm.get('title')?.hasError('minlength')">
+            Task title must be at least 3 characters
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Description</mat-label>
+          <textarea matInput formControlName="description" 
+                    placeholder="Enter task description (optional)"
+                    rows="4"></textarea>
+          <mat-error *ngIf="taskForm.get('description')?.hasError('maxlength')">
+            Description must not exceed 500 characters
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Project</mat-label>
+          <mat-select formControlName="projectId" [disabled]="projectsLoading">
+            <mat-option *ngFor="let project of projects" [value]="project.id">
+              {{ project.name }}
+            </mat-option>
+          </mat-select>
+          <mat-error *ngIf="taskForm.get('projectId')?.hasError('required')">
+            Project is required
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Due Date</mat-label>
+          <input matInput [matDatepicker]="picker" formControlName="dueDate" placeholder="Choose a date">
+          <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+          <mat-datepicker #picker></mat-datepicker>
+          <mat-error *ngIf="taskForm.get('dueDate')?.hasError('required')">
+            Due date is required
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Status</mat-label>
+          <mat-select formControlName="status">
+            <mat-option value="TODO">To Do</mat-option>
+            <mat-option value="IN_PROGRESS">In Progress</mat-option>
+            <mat-option value="DONE">Done</mat-option>
+          </mat-select>
+          <mat-error *ngIf="taskForm.get('status')?.hasError('required')">
+            Status is required
+          </mat-error>
+        </mat-form-field>
+
+        <div class="form-actions">
+          <button mat-button type="button" (click)="onCancel()" [disabled]="loading">
+            Cancel
+          </button>
+          <button mat-raised-button color="primary" type="submit" [disabled]="loading || !taskForm.valid">
+            <mat-spinner *ngIf="loading" diameter="20"></mat-spinner>
+            <span *ngIf="!loading">Create Task</span>
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</div>
