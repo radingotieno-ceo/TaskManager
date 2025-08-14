@@ -101,35 +101,32 @@ export class DashboardService {
 
   // Get admin dashboard data
   getAdminDashboardData(): Observable<DashboardData> {
-    return this.http.get<DashboardData>(`${this.apiUrl}/dashboard/admin`)
-      .pipe(
-        catchError(error => {
-          console.error('Error fetching admin dashboard data:', error);
-          return throwError(() => error);
-        })
-      );
+    return this.http.get<DashboardData>(`${this.apiUrl}/dashboard/admin`).pipe(
+      catchError(error => {
+        console.error('Error fetching admin dashboard data:', error);
+        return throwError(() => error);
+      })
+    );
   }
 
   // Get manager dashboard data
   getManagerDashboardData(): Observable<DashboardData> {
-    return this.http.get<DashboardData>(`${this.apiUrl}/dashboard/manager`)
-      .pipe(
-        catchError(error => {
-          console.error('Error fetching manager dashboard data:', error);
-          return throwError(() => error);
-        })
-      );
+    return this.http.get<DashboardData>(`${this.apiUrl}/dashboard/manager`).pipe(
+      catchError(error => {
+        console.error('Error fetching manager dashboard data:', error);
+        return throwError(() => error);
+      })
+    );
   }
 
   // Get user dashboard data
-  getUserDashboardData(userId: number): Observable<DashboardData> {
-    return this.http.get<DashboardData>(`${this.apiUrl}/dashboard/user/${userId}`)
-      .pipe(
-        catchError(error => {
-          console.error('Error fetching user dashboard data:', error);
-          return throwError(() => error);
-        })
-      );
+  getUserDashboardData(): Observable<DashboardData> {
+    return this.http.get<DashboardData>(`${this.apiUrl}/dashboard/user`).pipe(
+      catchError(error => {
+        console.error('Error fetching user dashboard data:', error);
+        return throwError(() => error);
+      })
+    );
   }
 
   // Get role-based dashboard data

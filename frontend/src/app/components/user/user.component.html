@@ -58,7 +58,12 @@
         
         <div class="user-profile">
           <div class="avatar">
-            <img *ngIf="currentUser?.profilePhotoUrl" [src]="getProfilePhotoUrl(currentUser?.profilePhotoUrl)" alt="Profile Photo" class="profile-image">
+            <img *ngIf="currentUser?.profilePhotoUrl" 
+                 [src]="getProfilePhotoUrl(currentUser?.profilePhotoUrl)" 
+                 alt="Profile Photo" 
+                 class="profile-image"
+                 (load)="onImageLoad($event)"
+                 (error)="onImageError($event)">
             <mat-icon *ngIf="!currentUser?.profilePhotoUrl">person</mat-icon>
           </div>
           <div class="user-info" *ngIf="currentUser">
@@ -253,9 +258,18 @@
               <div class="profile-info" *ngIf="currentUser">
                 <div class="profile-photo-section">
                   <div class="profile-photo">
-                    <img *ngIf="currentUser?.profilePhotoUrl" [src]="getProfilePhotoUrl(currentUser?.profilePhotoUrl)" alt="Profile Photo" class="profile-image">
+                    <img *ngIf="currentUser?.profilePhotoUrl" 
+                         [src]="getProfilePhotoUrl(currentUser?.profilePhotoUrl)" 
+                         alt="Profile Photo" 
+                         class="profile-image"
+                         (load)="onImageLoad($event)"
+                         (error)="onImageError($event)">
                     <div *ngIf="!currentUser?.profilePhotoUrl" class="profile-placeholder">
                       <mat-icon>person</mat-icon>
+                    </div>
+                    <div *ngIf="uploadingPhoto" class="upload-loading">
+                      <mat-spinner diameter="20"></mat-spinner>
+                      Uploading...
                     </div>
                   </div>
                   <div class="photo-actions">
@@ -337,6 +351,33 @@
                   </mat-form-field>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Photo Preview Modal -->
+        <div class="modal-overlay" *ngIf="showPhotoPreviewModal" (click)="closePhotoPreviewModal()">
+          <div class="modal-content photo-preview-modal" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+              <h3>Preview Photo</h3>
+              <button class="close-btn" (click)="closePhotoPreviewModal()">
+                <mat-icon>close</mat-icon>
+              </button>
+            </div>
+            <div class="modal-body">
+              <div class="photo-preview-container">
+                <img [src]="selectedPhotoPreview" alt="Photo Preview" class="preview-image">
+                <p class="preview-text">This is how your profile photo will look. Continue with upload?</p>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button class="btn btn-secondary" (click)="closePhotoPreviewModal()">
+                Cancel
+              </button>
+              <button class="btn btn-primary" (click)="confirmPhotoUpload()" [disabled]="uploadingPhoto">
+                <mat-spinner diameter="16" *ngIf="uploadingPhoto"></mat-spinner>
+                {{ uploadingPhoto ? 'Uploading...' : 'Upload Photo' }}
+              </button>
             </div>
           </div>
         </div>

@@ -182,8 +182,9 @@ public class UserService implements UserDetailsService {
             String extension = originalFilename != null ? originalFilename.substring(originalFilename.lastIndexOf(".")) : ".jpg";
             String filename = "profile_" + System.currentTimeMillis() + extension;
             
-            // Create uploads directory if it doesn't exist
-            String uploadDir = "uploads/profile-photos";
+            // Create uploads directory in user's home directory
+            String userHome = System.getProperty("user.home");
+            String uploadDir = userHome + File.separator + "taskmanager-uploads" + File.separator + "profile-photos";
             File dir = new File(uploadDir);
             if (!dir.exists()) {
                 boolean created = dir.mkdirs();
@@ -195,7 +196,7 @@ public class UserService implements UserDetailsService {
             }
             
             // Save file
-            String filePath = uploadDir + "/" + filename;
+            String filePath = uploadDir + File.separator + filename;
             File dest = new File(filePath);
             file.transferTo(dest);
             
@@ -208,6 +209,19 @@ public class UserService implements UserDetailsService {
             log.error("Error saving profile photo: {}", e.getMessage());
             throw new RuntimeException("Error saving profile photo", e);
         }
+    }
+
+    public UserDto updateProfilePhoto(String userEmail, String photoUrl) {
+        log.info("Updating profile photo for user: {}", userEmail);
+        
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with email: " + userEmail));
+        
+        user.setProfilePhotoUrl(photoUrl);
+        User savedUser = userRepository.save(user);
+        
+        log.info("Profile photo updated successfully for user: {}", userEmail);
+        return new UserDto(savedUser);
     }
 }
 

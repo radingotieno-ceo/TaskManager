@@ -102,14 +102,14 @@ export class AuthService {
     formData.append('file', file);
     console.log('🔍 AuthService: FormData created, URL:', `${this.apiUrl}/auth/profile/upload-photo`);
     
-    return this.http.post<any>(`${this.apiUrl}/auth/profile/upload-photo`, formData, { 
-      headers: new HttpHeaders({
-        'Authorization': `Bearer ${this.getToken()}`
-      })
-    }).pipe(
+    // For FormData, don't set any headers - let browser handle Content-Type with boundary
+    // The Authorization header will be added by the HTTP interceptor
+    return this.http.post<any>(`${this.apiUrl}/auth/profile/upload-photo`, formData).pipe(
       tap(response => console.log('✅ AuthService: Upload response:', response)),
       catchError(error => {
         console.error('❌ AuthService: Upload error:', error);
+        console.error('❌ AuthService: Error status:', error.status);
+        console.error('❌ AuthService: Error message:', error.error);
         return throwError(() => error);
       })
     );

@@ -28,6 +28,8 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.HttpHeaders;
 import java.io.File;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -526,12 +528,34 @@ public class AuthController {
     @PostMapping("/profile/upload-photo")
     public ResponseEntity<MessageResponse> uploadProfilePhoto(@RequestParam("file") MultipartFile file) {
         try {
-            log.info("Uploading profile photo, file size: {} bytes", file.getSize());
+            log.info("=== PROFILE PHOTO UPLOAD REQUEST ===");
+            log.info("File name: {}", file.getOriginalFilename());
+            log.info("File size: {} bytes", file.getSize());
+            log.info("Content type: {}", file.getContentType());
+            log.info("File empty: {}", file.isEmpty());
+            
+            // Get current user from security context
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication != null) {
+                log.info("Current user: {}", authentication.getName());
+                log.info("User authorities: {}", authentication.getAuthorities());
+            } else {
+                log.warn("No authentication found in security context");
+            }
+            
             String photoUrl = userService.uploadProfilePhoto(file);
             log.info("Profile photo uploaded successfully: {}", photoUrl);
+            
+            // Update the user's profile in the database with the new photo URL
+            String userEmail = authentication.getName();
+            UserDto updatedUser = userService.updateProfilePhoto(userEmail, photoUrl);
+            log.info("User profile updated with new photo URL: {}", updatedUser.getProfilePhotoUrl());
+            
             return ResponseEntity.ok(new MessageResponse("Profile photo uploaded successfully", photoUrl));
         } catch (Exception e) {
             log.error("Error uploading profile photo: {}", e.getMessage());
+            log.error("Exception type: {}", e.getClass().getSimpleName());
+            e.printStackTrace();
             return ResponseEntity.badRequest().body(new MessageResponse("Error uploading photo: " + e.getMessage()));
         }
     }
@@ -539,7 +563,9 @@ public class AuthController {
     @GetMapping("/uploads/profile-photos/{filename}")
     public ResponseEntity<Resource> getProfilePhoto(@PathVariable String filename) {
         try {
-            String filePath = "uploads/profile-photos/" + filename;
+            // Use the same upload directory path as the upload method
+            String userHome = System.getProperty("user.home");
+            String filePath = userHome + File.separator + "taskmanager-uploads" + File.separator + "profile-photos" + File.separator + filename;
             File file = new File(filePath);
             
             if (!file.exists()) {

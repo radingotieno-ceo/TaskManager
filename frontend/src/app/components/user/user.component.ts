@@ -8,6 +8,7 @@ import { ProjectService } from '../../services/project.service';
 import { User } from '../../models/user.model';
 import { Task } from '../../models/task.model';
 import { Project } from '../../models/project.model';
+import { ChangeDetectorRef } from '@angular/core';
 
 @Component({
   selector: 'app-user',
@@ -48,6 +49,10 @@ export class UserComponent implements OnInit, OnDestroy {
     theme: 'light'
   };
 
+  selectedPhotoPreview: string | null = null;
+  showPhotoPreviewModal = false;
+  selectedPhotoFile: File | null = null;
+
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -55,7 +60,8 @@ export class UserComponent implements OnInit, OnDestroy {
     private taskService: TaskService,
     private projectService: ProjectService,
     private router: Router,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private cdr: ChangeDetectorRef
   ) {
     this.initializeForms();
   }
@@ -285,7 +291,28 @@ export class UserComponent implements OnInit, OnDestroy {
     if (!photoUrl) {
       return '';
     }
-    return `http://localhost:8080${photoUrl}`;
+    // Add timestamp to prevent caching issues
+    const timestamp = new Date().getTime();
+    return `http://localhost:8080${photoUrl}?t=${timestamp}`;
+  }
+
+  onImageError(event: any): void {
+    console.warn('⚠️ UserComponent: Profile image failed to load, using placeholder');
+    // Hide the image and show placeholder
+    event.target.style.display = 'none';
+    const placeholder = event.target.parentElement?.querySelector('.profile-placeholder');
+    if (placeholder) {
+      placeholder.style.display = 'flex';
+    }
+  }
+
+  onImageLoad(event: any): void {
+    console.log('✅ UserComponent: Profile image loaded successfully');
+    // Hide placeholder when image loads
+    const placeholder = event.target.parentElement?.querySelector('.profile-placeholder');
+    if (placeholder) {
+      placeholder.style.display = 'none';
+    }
   }
 
   onFileSelected(event: any): void {
@@ -294,9 +321,40 @@ export class UserComponent implements OnInit, OnDestroy {
     console.log('🔍 UserComponent: Selected file:', file);
     if (file) {
       console.log('🔍 UserComponent: File details - name:', file.name, 'size:', file.size, 'type:', file.type);
-      this.uploadProfilePhoto(file);
+      // Show preview first
+      this.showPhotoPreview(file);
     } else {
       console.warn('⚠️ UserComponent: No file selected');
+    }
+  }
+
+  showPhotoPreview(file: File): void {
+    // Store the selected file
+    this.selectedPhotoFile = file;
+    // Create a preview URL for the selected file
+    const reader = new FileReader();
+    reader.onload = (e: any) => {
+      this.selectedPhotoPreview = e.target.result;
+      this.showPhotoPreviewModal = true;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  confirmPhotoUpload(): void {
+    if (this.selectedPhotoFile) {
+      this.uploadProfilePhoto(this.selectedPhotoFile);
+      this.closePhotoPreviewModal();
+    }
+  }
+
+  closePhotoPreviewModal(): void {
+    this.showPhotoPreviewModal = false;
+    this.selectedPhotoPreview = null;
+    this.selectedPhotoFile = null;
+    // Reset file input
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
     }
   }
 
@@ -308,9 +366,17 @@ export class UserComponent implements OnInit, OnDestroy {
         next: (response) => {
           console.log('✅ UserComponent: Profile photo uploaded successfully:', response);
           if (this.currentUser) {
+            // Update the current user with the new photo URL
             this.currentUser.profilePhotoUrl = response.data;
             this.authService.updateCurrentUser(this.currentUser);
             console.log('✅ UserComponent: Updated current user with new photo URL:', response.data);
+            
+            // Force a refresh of the profile photo display
+            setTimeout(() => {
+              console.log('🔄 UserComponent: Refreshing profile photo display');
+              // Trigger change detection
+              this.cdr.detectChanges();
+            }, 100);
           }
           this.uploadingPhoto = false;
         },

@@ -16,11 +16,18 @@ export class AuthInterceptor implements HttpInterceptor {
     
     // Clone request and add authorization header if token exists
     if (token) {
+      // Don't set Content-Type for FormData requests - let browser handle it
+      const headers: any = {
+        Authorization: `Bearer ${token}`
+      };
+      
+      // Only set Content-Type for non-FormData requests
+      if (!(request.body instanceof FormData)) {
+        headers['Content-Type'] = 'application/json';
+      }
+      
       request = request.clone({
-        setHeaders: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+        setHeaders: headers
       });
     }
 

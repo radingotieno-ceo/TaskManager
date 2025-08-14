@@ -51,7 +51,8 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             requestURI.startsWith("/api/auth/debug-jwt") ||
             requestURI.startsWith("/api/auth/create-default-users") ||
             requestURI.startsWith("/api/auth/database-status") ||
-            requestURI.startsWith("/api/auth/database-full-status")) {
+            requestURI.startsWith("/api/auth/database-full-status") ||
+            requestURI.startsWith("/api/auth/uploads/profile-photos/")) {
             log.debug("Skipping JWT processing for: {} {}", requestMethod, requestURI);
             chain.doFilter(request, response);
             return;

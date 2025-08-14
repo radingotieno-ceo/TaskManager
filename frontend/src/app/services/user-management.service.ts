@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../environments/environment';
+import { map } from 'rxjs/operators';
 
 export interface User {
   id: number;
@@ -9,6 +9,7 @@ export interface User {
   email: string;
   role: string;
   createdAt: string;
+  profilePhotoUrl?: string;
 }
 
 export interface UserStatistics {
@@ -25,23 +26,27 @@ export interface UserStatistics {
   providedIn: 'root'
 })
 export class UserManagementService {
-  private apiUrl = environment.apiUrl;
+  private apiUrl = 'http://localhost:8080/api';
 
   constructor(private http: HttpClient) { }
 
   // Get all users
   getAllUsers(): Observable<User[]> {
-    return this.http.get<User[]>(`${this.apiUrl}/admin/users`);
+    return this.http.get<User[]>(`${this.apiUrl}/auth/users`);
   }
 
   // Get all managers
   getAllManagers(): Observable<User[]> {
-    return this.http.get<User[]>(`${this.apiUrl}/admin/users/managers`);
+    return this.http.get<User[]>(`${this.apiUrl}/auth/users`).pipe(
+      map(users => users.filter(user => user.role === 'MANAGER'))
+    );
   }
 
   // Get users available for task assignment
   getUsersAvailableForTaskAssignment(): Observable<User[]> {
-    return this.http.get<User[]>(`${this.apiUrl}/admin/users/available-for-tasks`);
+    return this.http.get<User[]>(`${this.apiUrl}/auth/users`).pipe(
+      map(users => users.filter(user => user.role === 'USER'))
+    );
   }
 
   // Update user role
@@ -61,7 +66,28 @@ export class UserManagementService {
 
   // Get user statistics
   getUserStatistics(): Observable<UserStatistics> {
-    return this.http.get<UserStatistics>(`${this.apiUrl}/admin/users/statistics`);
+    return this.http.get<User[]>(`${this.apiUrl}/auth/users`).pipe(
+      map(users => {
+        const totalUsers = users.length;
+        const adminUsers = users.filter(u => u.role === 'ADMIN').length;
+        const managerUsers = users.filter(u => u.role === 'MANAGER').length;
+        const regularUsers = users.filter(u => u.role === 'USER').length;
+        
+        const roleBreakdown = {
+          ADMIN: adminUsers,
+          MANAGER: managerUsers,
+          USER: regularUsers
+        };
+        
+        return {
+          totalUsers,
+          adminUsers,
+          managerUsers,
+          regularUsers,
+          roleBreakdown
+        };
+      })
+    );
   }
 
   // Delete user

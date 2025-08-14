@@ -47,9 +47,10 @@ public class SecurityConfig {
                 // Public endpoints
                 .requestMatchers("/health", "/test-db", "/simple-test", "/test-password-encoding").permitAll()
                 .requestMatchers("/api/auth/login", "/api/auth/register", "/api/auth/list-users", "/api/auth/check-user/**", "/api/auth/test-jwt", "/api/auth/test-jwt-details", "/api/auth/debug-jwt", "/api/auth/create-default-users", "/api/auth/database-status", "/api/auth/database-full-status").permitAll()
+                .requestMatchers("/api/auth/uploads/profile-photos/**").permitAll() // Allow public access to profile photos
                 
                 // Protected auth endpoints - require authentication
-                .requestMatchers("/api/auth/users").authenticated()
+                .requestMatchers("/api/auth/users", "/api/auth/profile/**").authenticated()
                 
                 // Swagger UI and OpenAPI
                 .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/swagger-resources/**").permitAll()
