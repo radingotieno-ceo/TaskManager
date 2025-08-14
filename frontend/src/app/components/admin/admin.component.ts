@@ -6,6 +6,7 @@ import { AuthService } from '../../services/auth.service';
 import { DashboardService, DashboardData } from '../../services/dashboard.service';
 import { UserManagementService } from '../../services/user-management.service';
 import { User } from '../../models/user.model';
+import { ProjectService } from '../../services/project.service';
 
 @Component({
   selector: 'app-admin',
@@ -102,7 +103,8 @@ export class AdminComponent implements OnInit, OnDestroy {
     private userManagementService: UserManagementService,
     private router: Router,
     private fb: FormBuilder,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private projectService: ProjectService
   ) {
     this.initializeForms();
   }
@@ -193,16 +195,14 @@ export class AdminComponent implements OnInit, OnDestroy {
       password: ['', [Validators.required, Validators.minLength(6)]],
       confirmPassword: ['', [Validators.required]],
       role: ['USER', [Validators.required]]
-    }, { validators: this.passwordMatchValidator });
+    }, { validators: this.addUserPasswordMatchValidator });
 
     // Initialize New Project form
     this.newProjectForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
       description: ['', [Validators.maxLength(500)]],
-      startDate: ['', [Validators.required]],
-      endDate: ['', [Validators.required]],
-      priority: ['MEDIUM', [Validators.required]],
-      status: ['PLANNING', [Validators.required]]
+      dueDate: ['', [Validators.required]],
+      priority: ['MEDIUM', [Validators.required]]
     });
   }
 
@@ -210,6 +210,18 @@ export class AdminComponent implements OnInit, OnDestroy {
     const newPassword = form.get('newPassword')?.value;
     const confirmPassword = form.get('confirmPassword')?.value;
     return newPassword === confirmPassword ? null : { passwordMismatch: true };
+  }
+
+  private addUserPasswordMatchValidator(form: FormGroup): { [key: string]: boolean } | null {
+    const password = form.get('password')?.value;
+    const confirmPassword = form.get('confirmPassword')?.value;
+    
+    // Only validate if both fields have values
+    if (!password || !confirmPassword) {
+      return null;
+    }
+    
+    return password === confirmPassword ? null : { passwordMismatch: true };
   }
 
   private loadDashboardData(): void {
@@ -480,6 +492,37 @@ export class AdminComponent implements OnInit, OnDestroy {
     console.log('🔒 AdminComponent: Changing password');
     this.passwordForm.reset();
     this.showPasswordModal = true;
+  }
+
+  submitChangePassword(): void {
+    console.log('🔒 AdminComponent: Submitting password change');
+    if (this.passwordForm.valid && this.currentUser) {
+      this.changingPassword = true;
+      const passwordData = {
+        email: this.currentUser.email,
+        currentPassword: this.passwordForm.value.currentPassword,
+        newPassword: this.passwordForm.value.newPassword,
+        confirmPassword: this.passwordForm.value.confirmPassword
+      };
+
+      this.authService.changePassword(passwordData)
+        .subscribe({
+          next: (response) => {
+            console.log('✅ AdminComponent: Password changed successfully:', response);
+            this.closePasswordModal();
+            this.changingPassword = false;
+            alert('Password changed successfully!');
+          },
+          error: (error) => {
+            console.error('❌ AdminComponent: Error changing password:', error);
+            this.changingPassword = false;
+            alert('Error changing password. Please try again.');
+          }
+        });
+    } else {
+      console.warn('⚠️ AdminComponent: Password form is invalid');
+      alert('Please fill in all password fields correctly.');
+    }
   }
 
   showTwoFactorAuth(): void {
@@ -755,15 +798,21 @@ export class AdminComponent implements OnInit, OnDestroy {
 
       console.log('➕ AdminComponent: User data to create:', userData);
       
-      // TODO: Call user management service to create user
-      // For now, simulate the creation
-      setTimeout(() => {
-        console.log('✅ AdminComponent: User created successfully');
-        this.closeAddUserModal();
-        this.loadUserManagementData(); // Reload user data
-        this.addingUser = false;
-        alert('User created successfully!');
-      }, 1000);
+      this.authService.createUserByAdmin(userData)
+        .subscribe({
+          next: (createdUser) => {
+            console.log('✅ AdminComponent: User created successfully:', createdUser);
+            this.closeAddUserModal();
+            this.loadUserManagementData(); // Reload user data
+            this.addingUser = false;
+            alert('User created successfully!');
+          },
+          error: (error) => {
+            console.error('❌ AdminComponent: Error creating user:', error);
+            this.addingUser = false;
+            alert('Error creating user: ' + (error.error?.message || error.message || 'Unknown error'));
+          }
+        });
     } else {
       console.warn('⚠️ AdminComponent: Add user form is invalid');
       alert('Please fill in all required fields correctly.');
@@ -785,23 +834,27 @@ export class AdminComponent implements OnInit, OnDestroy {
       const projectData = {
         name: this.newProjectForm.value.name,
         description: this.newProjectForm.value.description,
-        startDate: this.newProjectForm.value.startDate,
-        endDate: this.newProjectForm.value.endDate,
-        priority: this.newProjectForm.value.priority,
-        status: this.newProjectForm.value.status
+        dueDate: this.newProjectForm.value.dueDate,
+        priority: this.newProjectForm.value.priority
       };
 
       console.log('➕ AdminComponent: Project data to create:', projectData);
       
-      // TODO: Call project service to create project
-      // For now, simulate the creation
-      setTimeout(() => {
-        console.log('✅ AdminComponent: Project created successfully');
-        this.closeNewProjectModal();
-        this.loadDashboardData(); // Reload dashboard data
-        this.creatingProject = false;
-        alert('Project created successfully!');
-      }, 1000);
+      this.projectService.createProject(projectData)
+        .subscribe({
+          next: (createdProject) => {
+            console.log('✅ AdminComponent: Project created successfully:', createdProject);
+            this.closeNewProjectModal();
+            this.loadDashboardData(); // Reload dashboard data
+            this.creatingProject = false;
+            alert('Project created successfully!');
+          },
+          error: (error) => {
+            console.error('❌ AdminComponent: Error creating project:', error);
+            this.creatingProject = false;
+            alert('Error creating project: ' + (error.error?.message || error.message || 'Unknown error'));
+          }
+        });
     } else {
       console.warn('⚠️ AdminComponent: New project form is invalid');
       alert('Please fill in all required fields correctly.');

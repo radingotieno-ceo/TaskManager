@@ -157,4 +157,18 @@ export class AuthService {
   testBackendConnection(): Observable<any> {
     return this.http.get(`${this.apiUrl}/auth/test`);
   }
+
+  // Admin method for creating users
+  createUserByAdmin(userData: RegisterRequest): Observable<User> {
+    console.log('AuthService: Admin creating user:', userData);
+    return this.http.post<User>(`${this.apiUrl}/auth/admin/create-user`, userData, { 
+      headers: this.getHeaders() 
+    }).pipe(
+      tap(response => console.log('AuthService: User created successfully by admin:', response)),
+      catchError(error => {
+        console.error('AuthService: Error creating user by admin:', error);
+        return throwError(() => error);
+      })
+    );
+  }
 }

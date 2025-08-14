@@ -724,7 +724,7 @@
           <input matInput formControlName="confirmPassword" placeholder="Confirm new password" type="password">
         </mat-form-field>
         
-        <div class="error-message" *ngIf="passwordForm.errors?.['passwordMismatch']">
+        <div class="error-message" *ngIf="passwordForm.errors?.['passwordMismatch'] && passwordForm.get('newPassword')?.value && passwordForm.get('confirmPassword')?.value">
           Passwords do not match
         </div>
       </form>
@@ -733,7 +733,7 @@
       <button class="btn btn-secondary" (click)="closePasswordModal()">
         Cancel
       </button>
-      <button class="btn btn-primary" (click)="changePassword()" [disabled]="!passwordForm.valid || changingPassword">
+      <button class="btn btn-primary" (click)="submitChangePassword()" [disabled]="!passwordForm.valid || changingPassword">
         <mat-spinner diameter="16" *ngIf="changingPassword"></mat-spinner>
         {{ changingPassword ? 'Changing...' : 'Change Password' }}
       </button>
@@ -805,7 +805,7 @@
           </mat-error>
         </mat-form-field>
         
-        <div class="error-message" *ngIf="addUserForm.errors?.['passwordMismatch']">
+        <div class="error-message" *ngIf="addUserForm.errors?.['passwordMismatch'] && addUserForm.get('password')?.value && addUserForm.get('confirmPassword')?.value">
           Passwords do not match
         </div>
       </form>
@@ -854,47 +854,22 @@
         
         <div class="form-row">
           <mat-form-field>
-            <mat-label>Start Date</mat-label>
-            <input matInput formControlName="startDate" type="date">
-            <mat-error *ngIf="newProjectForm.get('startDate')?.hasError('required')">
-              Start date is required
+            <mat-label>Due Date</mat-label>
+            <input matInput formControlName="dueDate" type="date">
+            <mat-error *ngIf="newProjectForm.get('dueDate')?.hasError('required')">
+              Due date is required
             </mat-error>
           </mat-form-field>
           
-          <mat-form-field>
-            <mat-label>End Date</mat-label>
-            <input matInput formControlName="endDate" type="date">
-            <mat-error *ngIf="newProjectForm.get('endDate')?.hasError('required')">
-              End date is required
-            </mat-error>
-          </mat-form-field>
-        </div>
-        
-        <div class="form-row">
           <mat-form-field>
             <mat-label>Priority</mat-label>
             <mat-select formControlName="priority">
               <mat-option value="LOW">Low</mat-option>
               <mat-option value="MEDIUM">Medium</mat-option>
               <mat-option value="HIGH">High</mat-option>
-              <mat-option value="URGENT">Urgent</mat-option>
             </mat-select>
             <mat-error *ngIf="newProjectForm.get('priority')?.hasError('required')">
               Priority is required
-            </mat-error>
-          </mat-form-field>
-          
-          <mat-form-field>
-            <mat-label>Status</mat-label>
-            <mat-select formControlName="status">
-              <mat-option value="PLANNING">Planning</mat-option>
-              <mat-option value="IN_PROGRESS">In Progress</mat-option>
-              <mat-option value="ON_HOLD">On Hold</mat-option>
-              <mat-option value="COMPLETED">Completed</mat-option>
-              <mat-option value="CANCELLED">Cancelled</mat-option>
-            </mat-select>
-            <mat-error *ngIf="newProjectForm.get('status')?.hasError('required')">
-              Status is required
             </mat-error>
           </mat-form-field>
         </div>

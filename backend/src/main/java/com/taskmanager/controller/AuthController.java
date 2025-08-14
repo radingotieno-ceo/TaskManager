@@ -30,6 +30,7 @@ import org.springframework.http.HttpHeaders;
 import java.io.File;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -772,6 +773,29 @@ public class AuthController {
         } catch (Exception e) {
             log.error("Error checking full database status: {}", e.getMessage());
             return ResponseEntity.badRequest().body("Error checking full database status: " + e.getMessage());
+        }
+    }
+
+    // Admin endpoints for user management
+    @PostMapping("/admin/create-user")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<UserDto> createUserByAdmin(@Valid @RequestBody RegisterRequest request) {
+        log.info("Admin creating new user: {} with role: {}", request.getEmail(), request.getRole());
+        
+        try {
+            // Check if user already exists
+            if (userService.existsByEmail(request.getEmail())) {
+                log.warn("User already exists with email: {}", request.getEmail());
+                throw new RuntimeException("User with this email already exists");
+            }
+            
+            UserDto createdUser = userService.createUser(request);
+            log.info("User created successfully by admin: {}", createdUser.getEmail());
+            return ResponseEntity.ok(createdUser);
+            
+        } catch (Exception e) {
+            log.error("Error creating user by admin: {}", e.getMessage());
+            throw e;
         }
     }
 }
