@@ -41,16 +41,6 @@
       <input class="form__input" type="password" placeholder="Password" [(ngModel)]="loginData.password" name="loginPassword" required>
       <a class="form__link" (click)="forgotPassword()">Forgot your password?</a>
       
-      <!-- Debug button -->
-      <button type="button" (click)="testLoginData()" style="margin: 10px; padding: 5px; background: #ff6b6b; color: white; border: none; border-radius: 3px;">
-        Set Test Data
-      </button>
-      
-      <!-- Test backend connection button -->
-      <button type="button" (click)="testBackendConnection()" style="margin: 10px; padding: 5px; background: #4ecdc4; color: white; border: none; border-radius: 3px;">
-        Test Backend
-      </button>
-      
       <button class="form__button button submit" type="button" (click)="onLogin()" [disabled]="loading">
         <span *ngIf="!loading">SIGN IN</span>
         <span *ngIf="loading" class="loading">Processing...</span>

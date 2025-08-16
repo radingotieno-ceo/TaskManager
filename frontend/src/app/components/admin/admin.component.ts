@@ -95,6 +95,9 @@ export class AdminComponent implements OnInit, OnDestroy {
   addUserForm!: FormGroup;
   newProjectForm!: FormGroup;
 
+  // Photo upload modal state
+  showPhotoUploadModal = false;
+
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -447,6 +450,24 @@ export class AdminComponent implements OnInit, OnDestroy {
     this.showPhotoPreviewModal = true;
   }
 
+  uploadNewPhoto(): void {
+    console.log('📷 AdminComponent: Opening photo upload modal');
+    this.showPhotoUploadModal = true;
+  }
+
+  closePhotoUploadModal(): void {
+    console.log('❌ AdminComponent: Closing photo upload modal');
+    this.showPhotoUploadModal = false;
+    this.selectedPhotoFile = null;
+    this.selectedPhotoPreview = null;
+  }
+
+  removeSelectedPhoto(): void {
+    console.log('🗑️ AdminComponent: Removing selected photo');
+    this.selectedPhotoFile = null;
+    this.selectedPhotoPreview = null;
+  }
+
   onFileSelected(event: any): void {
     console.log('🔍 AdminComponent: File selected event:', event);
     const file = event.target.files[0];
@@ -472,7 +493,8 @@ export class AdminComponent implements OnInit, OnDestroy {
   removeProfilePhoto(): void {
     console.log('🗑️ AdminComponent: Removing profile photo');
     if (confirm('Are you sure you want to remove your profile photo?')) {
-      // TODO: Implement photo removal
+      // TODO: Implement photo removal API call
+      console.log('🗑️ AdminComponent: Photo removal functionality coming soon!');
       alert('Photo removal functionality coming soon!');
     }
   }
@@ -709,6 +731,7 @@ export class AdminComponent implements OnInit, OnDestroy {
     if (this.selectedPhotoFile) {
       this.uploadProfilePhoto(this.selectedPhotoFile);
       this.closePhotoPreviewModal();
+      this.closePhotoUploadModal();
     }
   }
 
@@ -734,6 +757,7 @@ export class AdminComponent implements OnInit, OnDestroy {
         error: (error) => {
           console.error('❌ AdminComponent: Error uploading profile photo:', error);
           this.uploadingPhoto = false;
+          alert('Error uploading photo: ' + (error.error?.message || error.message || 'Unknown error'));
         }
       });
   }

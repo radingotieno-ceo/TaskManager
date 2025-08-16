@@ -114,7 +114,7 @@
                   <span class="progress-text">{{ getTaskProgress(task) }}%</span>
                 </div>
                 <div class="task-footer">
-                  <span class="status-badge" [class]="task.status.toLowerCase()">{{ task.status || 'TODO' }}</span>
+                  <span class="status-badge" [class]="(task.status || 'TODO').toLowerCase()">{{ task.status || 'TODO' }}</span>
                   <span class="due-date">
                     <mat-icon class="calendar-icon">calendar_today</mat-icon>
                     {{ task.dueDate | date:'yyyy-MM-dd' || 'No due date' }}

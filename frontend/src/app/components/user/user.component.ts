@@ -130,6 +130,12 @@ export class UserComponent implements OnInit, OnDestroy {
         .subscribe({
           next: (tasks) => {
             console.log('✅ UserComponent: Received tasks from server:', tasks);
+            // Debug: Log first task structure
+            if (tasks.length > 0) {
+              console.log('🔍 UserComponent: First task structure:', tasks[0]);
+              console.log('🔍 UserComponent: First task priority:', tasks[0].priority);
+              console.log('🔍 UserComponent: First task status:', tasks[0].status);
+            }
             this.myTasks = tasks;
             this.calculateTaskStats();
             console.log('✅ UserComponent: Task stats calculated:', this.taskStats);

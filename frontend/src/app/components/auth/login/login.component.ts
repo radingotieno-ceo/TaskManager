@@ -43,34 +43,6 @@ export class LoginComponent implements OnInit {
     console.log('Login component initialized'); // Debug log
   }
 
-  // Simple test method
-  testButtonClick(): void {
-    console.log('Button clicked!'); // Debug log
-    alert('Button click detected!');
-  }
-
-  // Test method to set login data
-  testLoginData(): void {
-    this.loginData.email = 'test@karooth.com';
-    this.loginData.password = 'password123';
-    console.log('Set test login data:', this.loginData);
-  }
-
-  // Test backend connection
-  testBackendConnection(): void {
-    console.log('Testing backend connection...');
-    this.authService.testBackendConnection().subscribe({
-      next: (response) => {
-        console.log('Backend connection successful:', response);
-        alert('Backend is running! Response: ' + JSON.stringify(response));
-      },
-      error: (error) => {
-        console.error('Backend connection failed:', error);
-        alert('Backend connection failed: ' + error.message);
-      }
-    });
-  }
-
   initForm(): void {
     this.loginForm = this.formBuilder.group({
       email: ['', [Validators.required, Validators.email]],

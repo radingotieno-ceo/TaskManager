@@ -41,6 +41,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         log.debug("JWT Filter processing: {} {}", requestMethod, requestURI);
         
         // Skip JWT processing for specific auth endpoints and OPTIONS requests
+        // Note: /api/auth/users is NOT skipped - it requires authentication
         if ("OPTIONS".equals(requestMethod) || 
             requestURI.equals("/api/auth/login") ||
             requestURI.equals("/api/auth/register") ||

@@ -1,4 +1,4 @@
-<!-- TaskFlow Admin Dashboard -->
+<!-- TaskFlow Admin Dashboard - Premium Design -->
 <div class="dashboard-container">
   <!-- Left Sidebar Navigation -->
   <nav class="sidebar" [class.collapsed]="sidebarCollapsed">
@@ -98,35 +98,26 @@
       </button>
       <button class="action-btn analytics-btn" (click)="viewAnalytics()">
         <mat-icon>analytics</mat-icon>
-        <span>Analytics</span>
+        <span>View Analytics</span>
       </button>
     </div>
 
-    <!-- Dashboard Content -->
+    <!-- Main Content -->
     <div class="dashboard-content">
-      <!-- Loading State -->
-      <div class="loading-container" *ngIf="loading">
-        <mat-spinner diameter="50"></mat-spinner>
-        <p>Loading dashboard...</p>
-      </div>
-
-      <!-- Dashboard Content -->
-      <div class="content-area" *ngIf="!loading">
-        
-        <!-- Dashboard Tab -->
-        <div class="dashboard-sections" *ngIf="activeTab === 'dashboard'">
-          <!-- Quick Actions Section -->
-          <div class="section-card quick-actions">
-            <div class="section-header">
-              <h2 class="section-title">Quick Actions</h2>
-              <p class="section-subtitle">Common administrative tasks</p>
-            </div>
-            
+      <!-- Dashboard Tab -->
+      <div *ngIf="activeTab === 'dashboard'" class="content-area">
+        <!-- Quick Actions Grid -->
+        <div class="section-card">
+          <div class="section-header">
+            <h2 class="section-title">Quick Actions</h2>
+            <p class="section-subtitle">Common tasks and shortcuts</p>
+          </div>
+          <div class="quick-actions">
             <div class="quick-actions-grid">
-              <div class="quick-action-card" 
-                   *ngFor="let action of quickActions" 
-                   (click)="executeQuickAction(action.action)"
-                   [class]="action.color">
+              <div *ngFor="let action of quickActions" 
+                   class="quick-action-card" 
+                   [class]="action.color"
+                   (click)="executeQuickAction(action.action)">
                 <div class="action-icon" [class]="action.color">
                   <mat-icon>{{ action.icon }}</mat-icon>
                 </div>
@@ -134,72 +125,15 @@
               </div>
             </div>
           </div>
+        </div>
 
-          <!-- System Overview Section -->
-          <div class="section-card system-overview">
-            <div class="section-header">
-              <h2 class="section-title">System Overview</h2>
-              <p class="section-subtitle">Real-time system statistics and health</p>
-              <button class="refresh-btn" (click)="refreshSystemMetrics()">
-                <mat-icon>refresh</mat-icon>
-                Refresh
-              </button>
-            </div>
-            
-            <div class="stats-grid">
-              <div class="stat-card">
-                <div class="stat-icon users">
-                  <mat-icon>group</mat-icon>
-                </div>
-                <div class="stat-content">
-                  <h3 class="stat-value">{{ systemOverview.totalUsers || 0 }}</h3>
-                  <p class="stat-label">Total Users</p>
-                </div>
-              </div>
-              
-              <div class="stat-card">
-                <div class="stat-icon projects">
-                  <mat-icon>folder</mat-icon>
-                </div>
-                <div class="stat-content">
-                  <h3 class="stat-value">{{ systemOverview.activeProjects || 0 }}</h3>
-                  <p class="stat-label">Active Projects</p>
-                </div>
-              </div>
-              
-              <div class="stat-card">
-                <div class="stat-icon tasks">
-                  <mat-icon>task_alt</mat-icon>
-                </div>
-                <div class="stat-content">
-                  <h3 class="stat-value">{{ systemOverview.tasksCompleted || 0 }}</h3>
-                  <p class="stat-label">Tasks Completed</p>
-                </div>
-              </div>
-              
-              <div class="stat-card">
-                <div class="stat-icon health">
-                  <mat-icon>health_and_safety</mat-icon>
-                </div>
-                <div class="stat-content">
-                  <h3 class="stat-value">{{ systemOverview.systemHealth || 100 }}%</h3>
-                  <p class="stat-label">System Health</p>
-                </div>
-              </div>
-            </div>
+        <!-- System Performance -->
+        <div class="section-card">
+          <div class="section-header">
+            <h2 class="section-title">System Performance</h2>
+            <p class="section-subtitle">Real-time system metrics</p>
           </div>
-
-          <!-- System Performance Section -->
-          <div class="section-card system-performance">
-            <div class="section-header">
-              <h2 class="section-title">System Performance</h2>
-              <p class="section-subtitle">Real-time performance metrics</p>
-              <button class="refresh-btn" (click)="refreshPerformanceMetrics()">
-                <mat-icon>refresh</mat-icon>
-                Refresh
-              </button>
-            </div>
-            
+          <div class="system-performance">
             <div class="performance-grid">
               <div class="performance-card">
                 <div class="performance-header">
@@ -220,415 +154,172 @@
                   <div class="performance-fill" [style.width.%]="systemMetrics.memoryUsage"></div>
                 </div>
               </div>
-              
-              <div class="performance-card">
-                <div class="performance-header">
-                  <h4>Response Time</h4>
-                  <span class="performance-value">{{ performanceMetrics.responseTime }}ms</span>
-                </div>
-                <div class="performance-indicator" [class]="performanceMetrics.responseTime < 100 ? 'good' : performanceMetrics.responseTime < 200 ? 'warning' : 'critical'">
-                  <mat-icon>{{ performanceMetrics.responseTime < 100 ? 'speed' : performanceMetrics.responseTime < 200 ? 'warning' : 'error' }}</mat-icon>
-                </div>
-              </div>
-              
-              <div class="performance-card">
-                <div class="performance-header">
-                  <h4>Uptime</h4>
-                  <span class="performance-value">{{ performanceMetrics.uptime }}%</span>
-                </div>
-                <div class="performance-indicator good">
-                  <mat-icon>check_circle</mat-icon>
-                </div>
-              </div>
             </div>
           </div>
+        </div>
 
-          <!-- Recent Notifications Section -->
-          <div class="section-card recent-notifications">
-            <div class="section-header">
-              <h2 class="section-title">Recent Notifications</h2>
-              <p class="section-subtitle">System alerts and updates</p>
-              <button class="clear-btn" (click)="clearAllNotifications()" *ngIf="recentNotifications.length > 0">
+        <!-- Recent Notifications -->
+        <div class="section-card">
+          <div class="section-header">
+            <h2 class="section-title">Recent Notifications</h2>
+            <div class="header-actions">
+              <button class="refresh-btn" (click)="clearAllNotifications()">
                 <mat-icon>clear_all</mat-icon>
                 Clear All
               </button>
             </div>
-            
+          </div>
+          <div class="recent-notifications">
             <div class="notifications-list">
-              <div class="notification-item" 
-                   *ngFor="let notification of recentNotifications" 
+              <div *ngFor="let notification of recentNotifications.slice(0, 5)" 
+                   class="notification-item" 
                    [class]="notification.type"
-                   [class.unread]="!notification.read">
+                   [class.unread]="!notification.read"
+                   (click)="markNotificationAsRead(notification.id)">
                 <div class="notification-icon">
-                  <mat-icon>{{ notification.type === 'warning' ? 'warning' : notification.type === 'error' ? 'error' : notification.type === 'success' ? 'check_circle' : 'info' }}</mat-icon>
+                  <mat-icon *ngIf="notification.type === 'info'">info</mat-icon>
+                  <mat-icon *ngIf="notification.type === 'warning'">warning</mat-icon>
+                  <mat-icon *ngIf="notification.type === 'error'">error</mat-icon>
+                  <mat-icon *ngIf="notification.type === 'success'">check_circle</mat-icon>
                 </div>
                 <div class="notification-content">
-                  <h4 class="notification-title">{{ notification.title }}</h4>
-                  <p class="notification-message">{{ notification.message }}</p>
-                  <span class="notification-time">{{ notification.timestamp | date:'short' }}</span>
+                  <div class="notification-title">{{ notification.title }}</div>
+                  <div class="notification-message">{{ notification.message }}</div>
+                  <div class="notification-time">{{ notification.timestamp | date:'short' }}</div>
                 </div>
-                <button class="notification-action" 
-                        (click)="markNotificationAsRead(notification.id)"
-                        *ngIf="!notification.read">
-                  <mat-icon>check</mat-icon>
+                <button class="notification-action" *ngIf="!notification.read">
+                  <mat-icon>close</mat-icon>
                 </button>
-              </div>
-              
-              <!-- Empty state -->
-              <div class="empty-state" *ngIf="recentNotifications.length === 0">
-                <mat-icon class="empty-icon">notifications_none</mat-icon>
-                <p class="empty-text">No notifications</p>
-                <p class="empty-subtext">All caught up! No new notifications at this time.</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Project Portfolio Section -->
-          <div class="section-card project-portfolio">
-            <div class="section-header">
-              <h2 class="section-title">Project Portfolio</h2>
-              <p class="section-subtitle">All projects in the system</p>
-            </div>
-            
-            <div class="project-grid" *ngIf="projectPortfolio.length > 0">
-              <div class="project-card" *ngFor="let project of projectPortfolio">
-                <div class="project-header">
-                  <h3 class="project-name">{{ project.name }}</h3>
-                  <div class="project-actions">
-                    <button class="action-btn" (click)="showProjectOptions(project)">
-                      <mat-icon>more_vert</mat-icon>
-                    </button>
-                  </div>
-                </div>
-                
-                <div class="project-meta">
-                  <span class="priority-badge" [class]="project.priority?.toLowerCase()">{{ project.priority || 'MEDIUM' }}</span>
-                  <span class="status-badge" [class]="project.status?.toLowerCase()">{{ project.status || 'IN_PROGRESS' }}</span>
-                </div>
-                
-                <div class="project-progress">
-                  <div class="progress-bar">
-                    <div class="progress-fill" [style.width.%]="project.progress || 0"></div>
-                  </div>
-                  <div class="progress-text">{{ project.progress || 0 }}% Complete</div>
-                </div>
-                
-                <div class="project-footer">
-                  <div class="team-size">
-                    <mat-icon>group</mat-icon>
-                    {{ project.teamSize || 0 }} members
-                  </div>
-                  <div class="due-date">
-                    <mat-icon>event</mat-icon>
-                    {{ project.dueDate | date:'shortDate' }}
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <!-- Empty state -->
-            <div class="empty-state" *ngIf="projectPortfolio.length === 0">
-              <mat-icon class="empty-icon">folder_open</mat-icon>
-              <p class="empty-text">No projects found</p>
-              <p class="empty-subtext">Create your first project to get started</p>
-            </div>
-          </div>
-
-          <!-- Team Overview Section -->
-          <div class="section-card team-overview">
-            <div class="section-header">
-              <h2 class="section-title">Team Overview</h2>
-              <p class="section-subtitle">User statistics and team composition</p>
-            </div>
-            
-            <div class="team-stats">
-              <div class="team-stat">
-                <h3>{{ teamOverview.totalUsers || 0 }}</h3>
-                <p>Total Users</p>
-              </div>
-              <div class="team-stat">
-                <h3>{{ teamOverview.managers || 0 }}</h3>
-                <p>Managers</p>
-              </div>
-              <div class="team-stat">
-                <h3>{{ teamOverview.regularUsers || 0 }}</h3>
-                <p>Regular Users</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Recent Activities Section -->
-          <div class="section-card recent-activities">
-            <div class="section-header">
-              <h2 class="section-title">Recent Activities</h2>
-              <p class="section-subtitle">Latest user activities and system events</p>
-            </div>
-            
-            <div class="activity-list">
-              <div class="activity-item" *ngFor="let activity of recentActivities">
-                <div class="activity-avatar">
-                  <mat-icon>person</mat-icon>
-                </div>
-                <div class="activity-content">
-                  <p class="activity-text"><strong>{{ activity.user }}</strong> {{ activity.action }}</p>
-                  <span class="activity-time">{{ activity.time }}</span>
-                </div>
-              </div>
-              
-              <!-- Empty state -->
-              <div class="empty-state" *ngIf="recentActivities.length === 0">
-                <mat-icon class="empty-icon">timeline</mat-icon>
-                <p class="empty-text">No recent activities</p>
-                <p class="empty-subtext">Activities will appear here as users interact with the system</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- System Alerts Section -->
-          <div class="section-card system-alerts">
-            <div class="section-header">
-              <h2 class="section-title">System Alerts</h2>
-              <p class="section-subtitle">Important system notifications</p>
-            </div>
-            
-            <div class="alert-list">
-              <div class="alert-item" *ngFor="let alert of systemAlerts" [class]="alert.type">
-                <mat-icon class="alert-icon">{{ alert.type === 'warning' ? 'warning' : 'info' }}</mat-icon>
-                <div class="alert-content">
-                  <h4 class="alert-title">{{ alert.title }}</h4>
-                  <p class="alert-description">{{ alert.description }}</p>
-                </div>
-              </div>
-              
-              <!-- Empty state -->
-              <div class="empty-state" *ngIf="systemAlerts.length === 0">
-                <mat-icon class="empty-icon">check_circle</mat-icon>
-                <p class="empty-text">All systems operational</p>
-                <p class="empty-subtext">No alerts at this time</p>
               </div>
             </div>
           </div>
         </div>
+      </div>
 
-        <!-- Projects Tab -->
-        <div class="tab-content" *ngIf="activeTab === 'projects'">
-          <div class="section-card">
-            <h2>Project Management</h2>
-            <p>Comprehensive project management tools and analytics coming soon...</p>
-            <div class="action-buttons">
-              <button class="action-btn add-user-btn" (click)="newProject()">
-                <mat-icon>add</mat-icon>
-                Create New Project
+      <!-- Team Tab -->
+      <div *ngIf="activeTab === 'team'" class="content-area">
+        <div class="section-card">
+          <div class="section-header">
+            <h2 class="section-title">Team Management</h2>
+            <div class="header-actions">
+              <button class="refresh-btn" (click)="refreshTeamData()">
+                <mat-icon>refresh</mat-icon>
+                Refresh
               </button>
             </div>
           </div>
-        </div>
 
-        <!-- Tasks Tab -->
-        <div class="tab-content" *ngIf="activeTab === 'tasks'">
-          <div class="section-card">
-            <h2>Task Management</h2>
-            <p>Advanced task management and assignment tools coming soon...</p>
-            <div class="action-buttons">
-              <button class="action-btn add-user-btn" (click)="assignTask()">
-                <mat-icon>task</mat-icon>
-                Assign New Task
+          <!-- User Statistics -->
+          <div class="team-stats">
+            <div class="team-stat">
+              <h3>{{ userStatistics.totalUsers || 0 }}</h3>
+              <p>Total Users</p>
+            </div>
+            <div class="team-stat">
+              <h3>{{ userStatistics.adminUsers || 0 }}</h3>
+              <p>Admins</p>
+            </div>
+            <div class="team-stat">
+              <h3>{{ userStatistics.managerUsers || 0 }}</h3>
+              <p>Managers</p>
+            </div>
+            <div class="team-stat">
+              <h3>{{ userStatistics.regularUsers || 0 }}</h3>
+              <p>Regular Users</p>
+            </div>
+          </div>
+
+          <!-- Users List -->
+          <div class="user-list">
+            <h3>All Users</h3>
+            <div class="user-item" *ngFor="let user of allUsers">
+              <div class="user-info">
+                <div class="user-avatar">
+                  <span>{{ user.name.charAt(0) }}</span>
+                </div>
+                <div class="user-details">
+                  <h4>{{ user.name }}</h4>
+                  <p>{{ user.email }}</p>
+                </div>
+              </div>
+              <div class="user-actions">
+                <span class="role-badge" [class]="user.role.toLowerCase()">{{ user.role }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Settings Tab -->
+      <div *ngIf="activeTab === 'settings'" class="content-area">
+        <div class="section-card">
+          <div class="section-header">
+            <h2 class="section-title">Settings</h2>
+          </div>
+          
+          <!-- Profile Settings -->
+          <div class="setting-section">
+            <h3>Profile Settings</h3>
+            <div class="profile-info">
+              <div class="profile-photo-section">
+                <div class="profile-photo">
+                  <img *ngIf="currentUser?.profilePhotoUrl" 
+                       [src]="getProfilePhotoUrl(currentUser?.profilePhotoUrl)" 
+                       alt="Profile Photo" 
+                       class="profile-image"
+                       (load)="onImageLoad($event)"
+                       (error)="onImageError($event)">
+                  <div *ngIf="!currentUser?.profilePhotoUrl" class="profile-placeholder">
+                    <mat-icon>person</mat-icon>
+                  </div>
+                  <div *ngIf="uploadingPhoto" class="upload-loading">
+                    <mat-spinner diameter="24"></mat-spinner>
+                    <span>Uploading...</span>
+                  </div>
+                </div>
+                <div class="photo-actions">
+                  <button class="action-btn" (click)="uploadNewPhoto()">
+                    <mat-icon>upload</mat-icon>
+                    Upload Photo
+                  </button>
+                  <button *ngIf="currentUser?.profilePhotoUrl" class="action-btn secondary" (click)="removeProfilePhoto()">
+                    <mat-icon>delete</mat-icon>
+                    Remove Photo
+                  </button>
+                </div>
+              </div>
+              <div class="profile-details">
+                <div class="info-item">
+                  <label>Name:</label>
+                  <span>{{ currentUser?.name }}</span>
+                  <button class="edit-btn" (click)="editProfile()">
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                </div>
+                <div class="info-item">
+                  <label>Email:</label>
+                  <span>{{ currentUser?.email }}</span>
+                </div>
+                <div class="info-item">
+                  <label>Role:</label>
+                  <span>{{ currentUser?.role }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Security Settings -->
+          <div class="setting-section">
+            <h3>Security</h3>
+            <div class="security-actions">
+              <button class="action-btn" (click)="changePassword()">
+                <mat-icon>lock</mat-icon>
+                Change Password
               </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Reports Tab -->
-        <div class="tab-content" *ngIf="activeTab === 'reports'">
-          <div class="section-card">
-            <h2>Reports & Analytics</h2>
-            <p>Comprehensive reporting and analytics dashboard coming soon...</p>
-            <div class="action-buttons">
-              <button class="action-btn analytics-btn" (click)="viewAnalytics()">
-                <mat-icon>analytics</mat-icon>
-                Generate Report
+              <button class="action-btn" (click)="showTwoFactorAuth()">
+                <mat-icon>security</mat-icon>
+                Two-Factor Authentication
               </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Team Tab -->
-        <div class="team-management" *ngIf="activeTab === 'team'">
-          <div class="section-card">
-            <div class="section-header">
-              <h2 class="section-title">Team Management</h2>
-              <p class="section-subtitle">Manage users, roles, and permissions</p>
-              <div class="header-actions">
-                <span class="last-updated" *ngIf="userStatistics.lastUpdated">
-                  Last updated: {{ userStatistics.lastUpdated }}
-                </span>
-                <button class="refresh-btn" (click)="refreshTeamData()" [disabled]="loadingTeamData">
-                  <mat-icon>{{ loadingTeamData ? 'hourglass_empty' : 'refresh' }}</mat-icon>
-                  {{ loadingTeamData ? 'Refreshing...' : 'Refresh Team Data' }}
-                </button>
-              </div>
-            </div>
-            
-            <!-- Loading indicator -->
-            <div class="loading-container" *ngIf="loadingTeamData">
-              <mat-spinner diameter="30"></mat-spinner>
-              <p>Refreshing team data...</p>
-            </div>
-            
-            <!-- Team content -->
-            <div *ngIf="!loadingTeamData">
-              <div class="user-statistics">
-                <div class="team-stat">
-                  <h3>{{ allUsers.length }}</h3>
-                  <p>Total Users</p>
-                </div>
-                <div class="team-stat">
-                  <h3>{{ allManagers.length }}</h3>
-                  <p>Managers</p>
-                </div>
-                <div class="team-stat">
-                  <h3>{{ allUsers.length - allManagers.length }}</h3>
-                  <p>Regular Users</p>
-                </div>
-              </div>
-              
-              <div class="user-list">
-                <h3>All Users</h3>
-                <div class="user-item" *ngFor="let user of allUsers">
-                  <div class="user-info">
-                    <div class="user-avatar">
-                      <mat-icon>person</mat-icon>
-                    </div>
-                    <div class="user-details">
-                      <h4>{{ user.name }}</h4>
-                      <p>{{ user.email }}</p>
-                      <span class="role-badge" [class]="user.role?.toLowerCase()">{{ user.role }}</span>
-                    </div>
-                  </div>
-                  <div class="user-actions">
-                    <button class="action-btn" 
-                            (click)="promoteUserToManager(user.id)" 
-                            *ngIf="user.role === 'USER'">
-                      <mat-icon>arrow_upward</mat-icon>
-                      Promote
-                    </button>
-                    <button class="action-btn" 
-                            (click)="demoteManagerToUser(user.id)" 
-                            *ngIf="user.role === 'MANAGER'">
-                      <mat-icon>arrow_downward</mat-icon>
-                      Demote
-                    </button>
-                    <button class="action-btn danger" 
-                            (click)="deleteUser(user.id)"
-                            *ngIf="user.role !== 'ADMIN'">
-                      <mat-icon>delete</mat-icon>
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Settings Tab -->
-        <div class="settings-section" *ngIf="activeTab === 'settings'">
-          <div class="section-card">
-            <div class="section-header">
-              <h2 class="section-title">Settings</h2>
-              <p class="section-subtitle">Manage your profile and system preferences</p>
-            </div>
-            
-            <div class="setting-section">
-              <h3>Profile Information</h3>
-              <div class="profile-info">
-                <div class="profile-photo-section">
-                  <div class="profile-photo" (click)="openPhotoPreview()">
-                    <img *ngIf="currentUser?.profilePhotoUrl" 
-                         [src]="getProfilePhotoUrl(currentUser?.profilePhotoUrl)" 
-                         class="profile-image"
-                         (load)="onImageLoad($event)"
-                         (error)="onImageError($event)">
-                    <div class="profile-placeholder" *ngIf="!currentUser?.profilePhotoUrl">
-                      <mat-icon>person</mat-icon>
-                    </div>
-                    <div class="upload-loading" *ngIf="uploadingPhoto">
-                      <mat-spinner diameter="24"></mat-spinner>
-                      <span>Uploading...</span>
-                    </div>
-                  </div>
-                  <div class="photo-actions">
-                    <button class="action-btn" (click)="openPhotoPreview()">
-                      <mat-icon>photo_camera</mat-icon>
-                      Change Photo
-                    </button>
-                    <button class="action-btn secondary" (click)="removeProfilePhoto()" *ngIf="currentUser?.profilePhotoUrl">
-                      <mat-icon>delete</mat-icon>
-                      Remove
-                    </button>
-                  </div>
-                </div>
-                
-                <div class="profile-details">
-                  <div class="info-item">
-                    <label>Name:</label>
-                    <span>{{ currentUser?.name }}</span>
-                    <button class="edit-btn" (click)="editProfile()">
-                      <mat-icon>edit</mat-icon>
-                    </button>
-                  </div>
-                  <div class="info-item">
-                    <label>Email:</label>
-                    <span>{{ currentUser?.email }}</span>
-                  </div>
-                  <div class="info-item">
-                    <label>Role:</label>
-                    <span>{{ currentUser?.role }}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <div class="setting-section">
-              <h3>Security</h3>
-              <div class="security-actions">
-                <button class="action-btn" (click)="changePassword()">
-                  <mat-icon>lock</mat-icon>
-                  Change Password
-                </button>
-                <button class="action-btn secondary" (click)="showTwoFactorAuth()">
-                  <mat-icon>security</mat-icon>
-                  Two-Factor Authentication
-                </button>
-              </div>
-            </div>
-            
-            <div class="setting-section">
-              <h3>Preferences</h3>
-              <div class="preferences">
-                <div class="preference-item">
-                  <label>Email Notifications</label>
-                  <mat-slide-toggle>
-                    Get email updates
-                  </mat-slide-toggle>
-                </div>
-                <div class="preference-item">
-                  <label>Task Reminders</label>
-                  <mat-slide-toggle>
-                    Get task reminders
-                  </mat-slide-toggle>
-                </div>
-                <div class="preference-item">
-                  <label>Theme</label>
-                  <mat-form-field>
-                    <mat-select>
-                      <mat-option value="light">Light</mat-option>
-                      <mat-option value="dark">Dark</mat-option>
-                      <mat-option value="auto">Auto</mat-option>
-                    </mat-select>
-                  </mat-form-field>
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -637,6 +328,7 @@
   </main>
 </div>
 
+<!-- Modals -->
 <!-- Photo Preview Modal -->
 <div class="modal-overlay" *ngIf="showPhotoPreviewModal" (click)="closePhotoPreviewModal()">
   <div class="modal-content photo-preview-modal" (click)="$event.stopPropagation()">
@@ -657,6 +349,60 @@
         Cancel
       </button>
       <button class="btn btn-primary" (click)="confirmPhotoUpload()" [disabled]="uploadingPhoto">
+        <mat-spinner diameter="16" *ngIf="uploadingPhoto"></mat-spinner>
+        {{ uploadingPhoto ? 'Uploading...' : 'Upload Photo' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Photo Upload Modal -->
+<div class="modal-overlay" *ngIf="showPhotoUploadModal" (click)="closePhotoUploadModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Upload Profile Photo</h3>
+      <button class="close-btn" (click)="closePhotoUploadModal()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="text-center mb-4">
+        <div class="upload-icon">
+          <mat-icon>photo_camera</mat-icon>
+        </div>
+        <p>Choose a photo to upload as your profile picture</p>
+        <p class="text-small">Supported formats: JPG, PNG, GIF (Max 5MB)</p>
+      </div>
+      
+      <!-- File Input -->
+      <div class="file-input-container">
+        <input type="file" 
+               #fileInput
+               accept="image/*" 
+               class="file-input" 
+               (change)="onFileSelected($event)">
+        <button class="btn btn-primary" (click)="fileInput.click()">
+          <mat-icon>upload</mat-icon>
+          Choose File
+        </button>
+      </div>
+      
+      <!-- Preview Section -->
+      <div *ngIf="selectedPhotoPreview" class="preview-section">
+        <h4>Preview:</h4>
+        <div class="preview-container">
+          <img [src]="selectedPhotoPreview" alt="Photo Preview" class="preview-image">
+          <button class="remove-btn" (click)="removeSelectedPhoto()">
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="closePhotoUploadModal()">
+        Cancel
+      </button>
+      <button class="btn btn-primary" (click)="confirmPhotoUpload()" [disabled]="!selectedPhotoFile || uploadingPhoto">
         <mat-spinner diameter="16" *ngIf="uploadingPhoto"></mat-spinner>
         {{ uploadingPhoto ? 'Uploading...' : 'Upload Photo' }}
       </button>

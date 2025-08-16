@@ -94,7 +94,7 @@ export class TaskService {
   }
 
   getAvailableUsers(): Observable<User[]> {
-    return this.http.get<User[]>(`${this.apiUrl}/auth/list-users`, { headers: this.getHeaders() })
+    return this.http.get<User[]>(`${this.apiUrl}/auth/users`, { headers: this.getHeaders() })
       .pipe(
         map(users => users.filter(user => user.role === 'USER'))
       );

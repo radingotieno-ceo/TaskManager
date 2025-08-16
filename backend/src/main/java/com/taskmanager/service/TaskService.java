@@ -12,7 +12,7 @@ import com.taskmanager.entity.Role;
 import com.taskmanager.repository.TaskRepository;
 import com.taskmanager.repository.ProjectRepository;
 import com.taskmanager.repository.UserRepository;
-import com.taskmanager.service.EmailService;
+import com.taskmanager.service.ResendEmailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
@@ -40,7 +40,7 @@ public class TaskService {
     private UserRepository userRepository;
     
     @Autowired
-    private EmailService emailService;
+    private ResendEmailService emailService;
     
     // Basic CRUD operations
     public List<TaskDto> getAllTasks() {
@@ -126,12 +126,35 @@ public class TaskService {
         Project project = projectRepository.findById(updateTaskDto.getProjectId())
                 .orElseThrow(() -> new EntityNotFoundException("Project not found with id: " + updateTaskDto.getProjectId()));
         
+        // Store old values for comparison
+        String oldTitle = task.getTitle();
+        String oldDescription = task.getDescription();
+        LocalDate oldDueDate = task.getDueDate();
+        
         task.setTitle(updateTaskDto.getTitle());
         task.setDescription(updateTaskDto.getDescription());
         task.setDueDate(updateTaskDto.getDueDate());
         task.setProject(project);
         
         Task savedTask = taskRepository.save(task);
+        
+        // Send email notification if task is assigned to someone
+        if (savedTask.getAssignedUser() != null) {
+            try {
+                String updateType = "Task Details Updated";
+                if (!oldTitle.equals(savedTask.getTitle())) {
+                    updateType = "Task Title Updated";
+                } else if (!oldDueDate.equals(savedTask.getDueDate())) {
+                    updateType = "Task Due Date Updated";
+                }
+                
+                emailService.sendTaskUpdateEmail(savedTask, savedTask.getAssignedUser(), updateType);
+            } catch (Exception e) {
+                // Log error but don't fail the operation
+                System.err.println("Failed to send task update email notification: " + e.getMessage());
+            }
+        }
+        
         return new TaskDto(savedTask);
     }
     
@@ -148,9 +171,22 @@ public class TaskService {
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new EntityNotFoundException("Task not found"));
         
+        TaskStatus oldStatus = task.getStatus();
         TaskStatus taskStatus = TaskStatus.valueOf(status.toUpperCase());
         task.setStatus(taskStatus);
         Task savedTask = taskRepository.save(task);
+        
+        // Send email notification if task is assigned to someone and status changed
+        if (savedTask.getAssignedUser() != null && !oldStatus.equals(taskStatus)) {
+            try {
+                String updateType = "Status Changed from " + oldStatus + " to " + taskStatus;
+                emailService.sendTaskUpdateEmail(savedTask, savedTask.getAssignedUser(), updateType);
+            } catch (Exception e) {
+                // Log error but don't fail the operation
+                System.err.println("Failed to send task status update email notification: " + e.getMessage());
+            }
+        }
+        
         return new TaskDto(savedTask);
     }
     
@@ -163,14 +199,23 @@ public class TaskService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
         
+        User oldAssignedUser = task.getAssignedUser();
         task.setAssignedUser(user);
         Task savedTask = taskRepository.save(task);
         
         // Send email notification asynchronously
         try {
-            emailService.sendTaskAssignmentEmail(task, user);
+            if (oldAssignedUser != null && !oldAssignedUser.getId().equals(user.getId())) {
+                // Task was reassigned to a different user
+                emailService.sendTaskUpdateEmail(savedTask, user, "Task Reassigned to You");
+                emailService.sendTaskUpdateEmail(savedTask, oldAssignedUser, "Task Unassigned from You");
+            } else {
+                // New assignment
+                emailService.sendTaskAssignmentEmail(task, user);
+            }
         } catch (Exception e) {
             // Don't fail the assignment if email fails
+            System.err.println("Failed to send task assignment email notification: " + e.getMessage());
         }
         
         return new TaskDto(savedTask);
@@ -216,6 +261,8 @@ public class TaskService {
                 .map(TaskDto::new)
                 .collect(Collectors.toList());
     }
+
+
     
     public List<TaskDto> getAssignedTasks() {
         // Get the current authenticated user

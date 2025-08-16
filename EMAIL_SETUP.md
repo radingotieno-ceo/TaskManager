@@ -1,199 +1,160 @@
-# Email Notification Setup Guide
+# Email Notification Service Setup Guide
 
 ## Overview
-This guide explains how to set up email notifications for the KAROOTH Task Manager application using different email service providers.
+This project uses Resend (https://resend.com) for sending email notifications to users when tasks are assigned, updated, or due soon.
 
-## Email Service Options
+## Configuration
 
-### 1. Gmail SMTP (Recommended for Development)
-**Pros:** Free, Easy setup, Good for testing
-**Cons:** Limited to 500 emails/day on free tier
+### 1. Resend Account Setup
+1. Sign up for a free account at [Resend](https://resend.com)
+2. Verify your domain or use the provided sandbox domain
+3. Get your API key from the Resend dashboard
 
-#### Setup Steps:
-1. **Enable 2-Factor Authentication** on your Gmail account
-2. **Generate App Password:**
-   - Go to Google Account Settings
-   - Security → 2-Step Verification → App passwords
-   - Generate a new app password for "Mail"
-3. **Configure Environment Variables:**
-   ```bash
-   MAIL_USERNAME=your-email@gmail.com
-   MAIL_PASSWORD=your-16-digit-app-password
-   MAIL_FROM=noreply@karooth.com
-   ```
+### 2. Environment Configuration
+Create a `.env` file in the backend directory with the following variables:
 
-### 2. SendGrid (Recommended for Production)
-**Pros:** Excellent deliverability, Good free tier, Analytics
-**Cons:** Paid plans required for high volume
-
-#### Setup Steps:
-1. **Create SendGrid Account:**
-   - Sign up at [sendgrid.com](https://sendgrid.com)
-   - Verify your email address
-2. **Create API Key:**
-   - Settings → API Keys → Create API Key
-   - Choose "Full Access" or "Restricted Access" (Mail Send)
-3. **Configure Environment Variables:**
-   ```bash
-   MAIL_USERNAME=apikey
-   MAIL_PASSWORD=your-sendgrid-api-key
-   MAIL_FROM=verified-sender@yourdomain.com
-   ```
-4. **Update application.yml:**
-   ```yaml
-   spring:
-     mail:
-       host: smtp.sendgrid.net
-       port: 587
-   ```
-
-### 3. Mailgun
-**Pros:** Good free tier, Simple API
-**Cons:** Limited features on free tier
-
-#### Setup Steps:
-1. **Create Mailgun Account:**
-   - Sign up at [mailgun.com](https://mailgun.com)
-   - Add your domain or use sandbox domain
-2. **Get API Key:**
-   - Sending → API Keys → Private API Key
-3. **Configure Environment Variables:**
-   ```bash
-   MAIL_USERNAME=postmaster@yourdomain.mailgun.org
-   MAIL_PASSWORD=your-mailgun-api-key
-   MAIL_FROM=noreply@yourdomain.com
-   ```
-
-### 4. Amazon SES (AWS)
-**Pros:** Very cost-effective, High deliverability
-**Cons:** Requires AWS account, More complex setup
-
-#### Setup Steps:
-1. **AWS Account Setup:**
-   - Create AWS account
-   - Navigate to Amazon SES
-2. **Verify Email Address:**
-   - Add and verify your sender email
-3. **Create SMTP Credentials:**
-   - SMTP Settings → Create SMTP Credentials
-4. **Configure Environment Variables:**
-   ```bash
-   MAIL_USERNAME=your-smtp-username
-   MAIL_PASSWORD=your-smtp-password
-   MAIL_FROM=verified-email@yourdomain.com
-   ```
-5. **Update application.yml:**
-   ```yaml
-   spring:
-     mail:
-       host: email-smtp.us-east-1.amazonaws.com
-       port: 587
-   ```
-
-## Environment Configuration
-
-### Development (Local)
-Create a `.env` file in your project root:
-```bash
-MAIL_USERNAME=your-email@gmail.com
-MAIL_PASSWORD=your-app-password
-MAIL_FROM=noreply@karooth.com
+```env
+# Resend Email Service Configuration
+RESEND_API_KEY=your-actual-resend-api-key-here
+RESEND_FROM_EMAIL=Felix@radingtechnologies.co.ke
 ```
 
-### Production (Docker)
-Update your `docker-compose.yml`:
+### 3. Application Configuration
+The email service is configured in `backend/src/main/resources/application.yml`:
+
 ```yaml
-services:
-  backend:
-    environment:
-      - MAIL_USERNAME=${MAIL_USERNAME}
-      - MAIL_PASSWORD=${MAIL_PASSWORD}
-      - MAIL_FROM=${MAIL_FROM}
-```
+# Resend Email Configuration
+resend:
+  api-key: ${RESEND_API_KEY:your-resend-api-key}
+  from-email: Felix@radingtechnologies.co.ke
 
-## Testing Email Configuration
-
-### 1. Test Endpoint
-Add this to your `TaskController` for testing:
-```java
-@PostMapping("/test-email")
-public ResponseEntity<String> testEmail(@RequestParam String email) {
-    try {
-        emailNotificationService.sendCustomNotification(
-            email, 
-            "Test Email from KAROOTH", 
-            "This is a test email from KAROOTH Task Manager."
-        );
-        return ResponseEntity.ok("Test email sent successfully!");
-    } catch (Exception e) {
-        return ResponseEntity.status(500).body("Failed to send email: " + e.getMessage());
-    }
-}
-```
-
-### 2. Manual Testing
-```bash
-# Test with curl
-curl -X POST "http://localhost:8080/api/tasks/test-email?email=test@example.com"
+# Email notification settings
+app:
+  email:
+    from: ${RESEND_FROM_EMAIL:Felix@radingtechnologies.co.ke}
 ```
 
 ## Email Templates
 
-The application supports three types of email notifications:
+### Task Assignment Email
+- **Trigger**: When a task is assigned to a user
+- **Template**: Beautiful HTML email with task details
+- **Features**: 
+  - Task title, description, project, status, priority, due date
+  - Call-to-action button to view task
+  - Professional styling with gradients
 
-1. **Task Assignment:** Sent when a task is assigned to a user
-2. **Task Update:** Sent when a task status is updated
-3. **Task Due Reminder:** Sent for tasks due soon
+### Task Update Email
+- **Trigger**: When a task status or details are updated
+- **Template**: HTML email with update information
+- **Features**:
+  - Update type indicator
+  - Current task status and details
+  - Link to view updated task
 
-### Customizing Email Content
-Edit the email templates in `EmailNotificationService.java`:
-- `buildTaskAssignmentEmail()`
-- `buildTaskUpdateEmail()`
-- `buildTaskDueReminderEmail()`
+### Task Due Reminder Email
+- **Trigger**: When a task is due soon (can be scheduled)
+- **Template**: Urgent reminder email
+- **Features**:
+  - Urgent warning indicator
+  - Task details and due date
+  - Call-to-action to update task
+
+## Implementation Details
+
+### Backend Services
+- `ResendEmailService`: Main email service using Resend API
+- `TaskService`: Integrates email notifications with task operations
+- Async processing with retry mechanism
+- Error handling and logging
+
+### Email Features
+- **HTML Templates**: Professional, responsive email designs
+- **Async Processing**: Non-blocking email sending
+- **Retry Mechanism**: Automatic retry on failure (3 attempts)
+- **Error Recovery**: Graceful handling of email failures
+- **Logging**: Comprehensive logging for debugging
+
+### Security
+- API key stored in environment variables
+- No sensitive data in email templates
+- Secure email delivery via Resend
+
+## Testing
+
+### 1. Test Email Sending
+```bash
+# Start the backend server
+cd backend
+./gradlew bootRun
+
+# Create a task assignment through the API
+curl -X POST http://localhost:8080/api/tasks/create-and-assign \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -d '{
+    "title": "Test Task",
+    "description": "Test task description",
+    "dueDate": "2024-12-31",
+    "projectId": 1,
+    "userId": 2,
+    "priority": "MEDIUM"
+  }'
+```
+
+### 2. Check Logs
+Monitor the application logs for email sending status:
+```bash
+# Look for email success/failure messages
+tail -f backend/logs/application.log
+```
 
 ## Troubleshooting
 
-### Common Issues:
+### Common Issues
 
-1. **Authentication Failed:**
-   - Check username/password
-   - Ensure 2FA is enabled (Gmail)
-   - Verify API key (SendGrid/Mailgun)
+1. **API Key Invalid**
+   - Verify your Resend API key is correct
+   - Check if the key has proper permissions
 
-2. **Connection Timeout:**
-   - Check firewall settings
-   - Verify SMTP host and port
-   - Check network connectivity
+2. **Domain Not Verified**
+   - Verify your sending domain in Resend dashboard
+   - Use sandbox domain for testing
 
-3. **Email Not Delivered:**
+3. **Email Not Received**
    - Check spam folder
-   - Verify sender email is authenticated
-   - Check email service logs
+   - Verify recipient email address
+   - Check Resend dashboard for delivery status
 
-### Debug Mode:
-Enable debug logging in `application.yml`:
+4. **Rate Limiting**
+   - Resend has rate limits (check your plan)
+   - Implement proper error handling
+
+### Debug Mode
+Enable debug logging by setting in `application.yml`:
 ```yaml
 logging:
   level:
-    org.springframework.mail: DEBUG
-    com.taskmanager.service.EmailNotificationService: DEBUG
+    com.taskmanager.service.ResendEmailService: DEBUG
+    com.resend: DEBUG
 ```
 
-## Security Best Practices
+## Production Deployment
 
-1. **Never commit credentials to version control**
-2. **Use environment variables for sensitive data**
-3. **Enable SSL/TLS for email connections**
-4. **Regularly rotate API keys and passwords**
-5. **Monitor email sending logs for suspicious activity**
+### Environment Variables
+Set these in your production environment:
+```bash
+export RESEND_API_KEY=your-production-api-key
+export RESEND_FROM_EMAIL=Felix@radingtechnologies.co.ke
+```
 
-## Cost Considerations
+### Monitoring
+- Monitor email delivery rates in Resend dashboard
+- Set up alerts for email failures
+- Review application logs regularly
 
-| Service | Free Tier | Paid Plans |
-|---------|-----------|------------|
-| Gmail SMTP | 500 emails/day | N/A |
-| SendGrid | 100 emails/day | $15/month for 50k |
-| Mailgun | 5k emails/month (3 months) | $35/month for 50k |
-| Amazon SES | $0.10 per 1k emails | Pay per use |
-
-Choose based on your expected email volume and budget requirements.
+## Support
+For issues with:
+- **Resend Service**: Contact Resend support
+- **Application Integration**: Check application logs and configuration
+- **Email Templates**: Modify HTML templates in `ResendEmailService.java`

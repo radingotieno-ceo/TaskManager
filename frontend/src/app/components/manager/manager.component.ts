@@ -255,9 +255,9 @@ export class ManagerComponent implements OnInit, OnDestroy {
         }
       });
 
-    // Load available users - using simpler approach like projects
+    // Load available users - using the correct service method
     console.log('🔍 ManagerComponent: Starting to load users...');
-    this.userService.getAllUsersForManager()
+    this.userService.getAvailableUsers()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (users) => {
@@ -736,7 +736,7 @@ export class ManagerComponent implements OnInit, OnDestroy {
     console.log('=== TESTING USER LOADING ===');
     console.log('🔍 Current token:', this.authService.getToken());
     
-    this.userService.getAllUsersForManager()
+    this.userService.getAvailableUsers()
       .subscribe({
         next: (users) => {
           console.log('✅ Users loaded successfully:', users);
