@@ -9,12 +9,17 @@ const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
   { path: 'login', component: LoginComponent },
   
-  // Role-based dashboard routes
+  // Role-based dashboard routes - redirect to role-specific dashboards
   { 
     path: 'dashboard', 
-    component: DashboardComponent,
     canActivate: [AuthGuard],
-    data: { roles: ['ADMIN', 'MANAGER', 'USER'] }
+    resolve: {
+      redirect: () => {
+        // This will be handled by the component
+        return null;
+      }
+    },
+    component: DashboardComponent
   },
   
   // Admin-specific routes

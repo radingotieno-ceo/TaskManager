@@ -31,10 +31,22 @@ import java.io.File;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.access.prepost.PreAuthorize;
+import com.taskmanager.service.ResendEmailService;
+
+// Swagger/OpenAPI annotations
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
 @RestController
 @RequestMapping("/api/auth")
 @CrossOrigin(origins = "*")
+@Tag(name = "Authentication", description = "Authentication and user management endpoints")
 public class AuthController {
 
     private static final Logger log = LoggerFactory.getLogger(AuthController.class);
@@ -50,9 +62,33 @@ public class AuthController {
     
     @Autowired
     private PasswordEncoder passwordEncoder;
+    
+    @Autowired
+    private ResendEmailService emailService;
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@Valid @RequestBody AuthRequest authRequest) {
+    @Operation(
+        summary = "User Login",
+        description = "Authenticate user with email and password, returns JWT token",
+        responses = {
+            @ApiResponse(
+                responseCode = "200", 
+                description = "Login successful",
+                content = @Content(schema = @Schema(implementation = AuthResponse.class))
+            ),
+            @ApiResponse(
+                responseCode = "401", 
+                description = "Invalid credentials"
+            ),
+            @ApiResponse(
+                responseCode = "400", 
+                description = "Invalid request data"
+            )
+        }
+    )
+    public ResponseEntity<AuthResponse> login(
+        @Parameter(description = "Login credentials", required = true)
+        @Valid @RequestBody AuthRequest authRequest) {
         log.info("=== LOGIN ATTEMPT DEBUG ===");
         log.info("Login attempt for email: {}", authRequest.getEmail());
         log.info("Password provided: {}", authRequest.getPassword());
@@ -135,7 +171,24 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
+    @Operation(
+        summary = "User Registration",
+        description = "Register a new user with name, email, password, and role",
+        responses = {
+            @ApiResponse(
+                responseCode = "200", 
+                description = "Registration successful",
+                content = @Content(schema = @Schema(implementation = AuthResponse.class))
+            ),
+            @ApiResponse(
+                responseCode = "400", 
+                description = "Invalid request data or user already exists"
+            )
+        }
+    )
+    public ResponseEntity<AuthResponse> register(
+        @Parameter(description = "User registration details", required = true)
+        @Valid @RequestBody RegisterRequest request) {
         try {
             // Check if user already exists
             if (userService.existsByEmail(request.getEmail())) {
@@ -796,6 +849,80 @@ public class AuthController {
         } catch (Exception e) {
             log.error("Error creating user by admin: {}", e.getMessage());
             throw e;
+        }
+    }
+    
+    @PostMapping("/test-email")
+    public ResponseEntity<String> testEmail(@RequestParam String toEmail) {
+        try {
+            log.info("Testing email service with recipient: {}", toEmail);
+            
+            String subject = "🧪 Email Service Test - KAROOTH Task Manager";
+            String htmlContent = """
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>Email Service Test</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                        .header { background: linear-gradient(135deg, #10b981, #3b82f6); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+                        .content { background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px; }
+                        .success { background: #d1fae5; color: #065f46; padding: 15px; border-radius: 8px; margin: 20px 0; }
+                        .details { background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin: 20px 0; }
+                        .footer { text-align: center; margin-top: 30px; color: #6b7280; font-size: 14px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="header">
+                            <h1>✅ Email Service Test Successful!</h1>
+                            <p>KAROOTH Task Manager Email System</p>
+                        </div>
+                        <div class="content">
+                            <div class="success">
+                                <h2>🎉 Congratulations!</h2>
+                                <p>The email service is working perfectly!</p>
+                            </div>
+                            
+                            <div class="details">
+                                <h3>📧 Test Details:</h3>
+                                <p><strong>Recipient:</strong> %s</p>
+                                <p><strong>Service:</strong> Resend Email API</p>
+                                <p><strong>From:</strong> Felix@radingtechnologies.co.ke</p>
+                                <p><strong>Timestamp:</strong> %s</p>
+                                <p><strong>Status:</strong> ✅ Delivered Successfully</p>
+                            </div>
+                            
+                            <p>This email confirms that:</p>
+                            <ul>
+                                <li>✅ Resend API is properly configured</li>
+                                <li>✅ Email templates are working</li>
+                                <li>✅ Task assignment notifications will be sent</li>
+                                <li>✅ Task update notifications will be sent</li>
+                                <li>✅ Due date reminders will be sent</li>
+                            </ul>
+                            
+                            <div class="footer">
+                                <p>Best regards,<br>KAROOTH Task Manager Team</p>
+                                <p>This is a test email. Please do not reply.</p>
+                            </div>
+                        </div>
+                    </div>
+                </body>
+                </html>
+                """.formatted(toEmail, java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("MMM dd, yyyy 'at' HH:mm:ss")));
+            
+            emailService.sendCustomEmail(toEmail, subject, htmlContent);
+            
+            log.info("Test email sent successfully to: {}", toEmail);
+            return ResponseEntity.ok("✅ Test email sent successfully to: " + toEmail);
+            
+        } catch (Exception e) {
+            log.error("Failed to send test email to: {}", toEmail, e);
+            return ResponseEntity.badRequest().body("❌ Failed to send test email: " + e.getMessage());
         }
     }
 }

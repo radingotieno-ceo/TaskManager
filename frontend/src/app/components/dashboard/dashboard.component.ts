@@ -85,7 +85,29 @@ export class DashboardComponent implements OnInit, OnDestroy {
       .subscribe((user: User | null) => {
         this.currentUser = user;
         this.loading = false;
+        
+        // Redirect to role-specific dashboard
+        if (user) {
+          this.redirectToRoleSpecificDashboard(user.role);
+        }
       });
+  }
+
+  private redirectToRoleSpecificDashboard(userRole: string): void {
+    switch (userRole) {
+      case 'ADMIN':
+        this.router.navigate(['/admin']);
+        break;
+      case 'MANAGER':
+        this.router.navigate(['/manager']);
+        break;
+      case 'USER':
+        this.router.navigate(['/user']);
+        break;
+      default:
+        // Fallback to user dashboard
+        this.router.navigate(['/user']);
+    }
   }
 
   ngOnDestroy(): void {

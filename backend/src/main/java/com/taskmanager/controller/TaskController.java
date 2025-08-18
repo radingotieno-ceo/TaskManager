@@ -13,9 +13,21 @@ import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Map;
 
+// Swagger/OpenAPI annotations
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+
 @RestController
 @RequestMapping("/api/tasks")
 @CrossOrigin(origins = "*")
+@Tag(name = "Task Management", description = "Task CRUD operations and management endpoints")
+@SecurityRequirement(name = "bearer-jwt")
 public class TaskController {
 
     @Autowired
@@ -23,6 +35,21 @@ public class TaskController {
 
     // Basic CRUD operations
     @GetMapping
+    @Operation(
+        summary = "Get All Tasks",
+        description = "Retrieve all tasks in the system (requires authentication)",
+        responses = {
+            @ApiResponse(
+                responseCode = "200", 
+                description = "List of tasks retrieved successfully",
+                content = @Content(schema = @Schema(implementation = TaskDto.class))
+            ),
+            @ApiResponse(
+                responseCode = "401", 
+                description = "Unauthorized - authentication required"
+            )
+        }
+    )
     public ResponseEntity<List<TaskDto>> getAllTasks() {
         return ResponseEntity.ok(taskService.getAllTasks());
     }
@@ -34,7 +61,28 @@ public class TaskController {
 
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
-    public ResponseEntity<TaskDto> createTask(@Valid @RequestBody CreateTaskDto createTaskDto) {
+    @Operation(
+        summary = "Create Task",
+        description = "Create a new task (Admin/Manager only)",
+        responses = {
+            @ApiResponse(
+                responseCode = "200", 
+                description = "Task created successfully",
+                content = @Content(schema = @Schema(implementation = TaskDto.class))
+            ),
+            @ApiResponse(
+                responseCode = "403", 
+                description = "Forbidden - Admin/Manager role required"
+            ),
+            @ApiResponse(
+                responseCode = "400", 
+                description = "Invalid request data"
+            )
+        }
+    )
+    public ResponseEntity<TaskDto> createTask(
+        @Parameter(description = "Task creation details", required = true)
+        @Valid @RequestBody CreateTaskDto createTaskDto) {
         return ResponseEntity.ok(taskService.createTask(createTaskDto));
     }
 

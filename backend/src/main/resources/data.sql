@@ -5,9 +5,9 @@
 
 -- Insert sample users (password: password123)
 INSERT INTO users (name, email, password, role) VALUES
-('Test Manager', 'test@karooth.com', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'MANAGER'),
-('Test User', 'user@karooth.com', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'USER'),
-('Admin User', 'admin@karooth.com', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'ADMIN');
+('Test Manager', 'test@karooth.com', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDa', 'MANAGER'),
+('Test User', 'user@karooth.com', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDa', 'USER'),
+('Admin User', 'admin@karooth.com', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDa', 'ADMIN');
 
 -- Sample projects for testing task creation functionality
 INSERT INTO projects (name, description, priority, due_date, status) VALUES
